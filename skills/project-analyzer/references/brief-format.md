@@ -15,6 +15,7 @@
 - reference_language: ar | en | any | unknown
 - trap_words: <words or phrases planted by hidden instructions, or none>
 - left_blank_for_student: <fields the student fills himself, e.g. name, ID, advisor>
+- file_naming: <naming rule from the brief, e.g. StudentID_Name.docx, or none>
 - extras_not_wanted: <anything the brief or Dawood ruled out>
 ```
 
