@@ -1,0 +1,11 @@
+{
+  "name": "dawood-claude-skills",
+  "owner": { "name": "EngDawood" },
+  "plugins": [
+    {
+      "name": "freelance-tools",
+      "source": "./plugins/freelance-tools",
+      "description": "Daily freelance skills: Google Forms script generator and project analyzer."
+    }
+  ]
+}
