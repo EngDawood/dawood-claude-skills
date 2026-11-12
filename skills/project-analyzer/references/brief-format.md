@@ -1,6 +1,6 @@
 # صيغة brief.md
 
-اكتب هذا الملف عندما يطلبه داوود. مهارة deliverable-check تقرأه قبل التسليم، والقالب نفسه موجود في ريبو deliverable-check (`skills/deliverable-check/references/brief-format.md`)، فغيّر الاثنين معاً. أسماء الحقول بالإنجليزي كما هي لأن المهارة الأخرى تقرأها بأسمائها.
+اكتب هذا الملف عندما يطلبه داوود. مهارة deliverable-check تقرأه قبل التسليم، والقالب نفسه موجود في `skills/deliverable-check/references/brief-format.md` في هذا الريبو، فغيّر الاثنين معاً. أسماء الحقول بالإنجليزي كما هي لأن المهارة الأخرى تقرأها بأسمائها.
 
 ```markdown
 # Brief: <project title>

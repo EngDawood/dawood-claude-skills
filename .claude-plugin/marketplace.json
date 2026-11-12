@@ -5,7 +5,7 @@
     {
       "name": "freelance-tools",
       "source": "./",
-      "description": "Daily freelance skills: Google Forms script generator, project analyzer and Word (.docx) tools."
+      "description": "Daily freelance skills: Google Forms script generator, project analyzer, deliverable check and Word (.docx) tools."
     }
   ]
 }
