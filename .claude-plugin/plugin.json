@@ -1,6 +1,6 @@
 {
   "name": "freelance-tools",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Daily freelance skills: Google Forms script generator, project analyzer and Word (.docx) tools.",
   "author": { "name": "EngDawood" },
   "license": "MIT"
