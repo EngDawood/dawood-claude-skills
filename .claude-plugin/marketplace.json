@@ -4,8 +4,8 @@
   "plugins": [
     {
       "name": "freelance-tools",
-      "source": "./plugins/freelance-tools",
-      "description": "Daily freelance skills: Google Forms script generator and project analyzer."
+      "source": "./",
+      "description": "Daily freelance skills: Google Forms script generator, project analyzer and Word (.docx) tools."
     }
   ]
 }

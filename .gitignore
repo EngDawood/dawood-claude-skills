@@ -220,4 +220,4 @@ __marimo__/
 .streamlit/secrets.toml
 
 # Keep compiled engines bundled with the user-docx skill
-!plugins/freelance-tools/skills/user-docx/**/*.so
+!skills/user-docx/**/*.so
