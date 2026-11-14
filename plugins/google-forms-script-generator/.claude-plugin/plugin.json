@@ -2,6 +2,10 @@
   "name": "google-forms-script-generator",
   "version": "0.1.0",
   "description": "Turns survey questions into a Google Apps Script that builds the Google Form.",
-  "author": { "name": "EngDawood" },
-  "license": "MIT"
+  "author": {
+    "name": "EngDawood",
+    "url": "https://engdawood.com"
+  },
+  "license": "MIT",
+  "homepage": "https://engdawood.com"
 }

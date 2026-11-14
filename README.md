@@ -1,4 +1,4 @@
-# dawood-claude-skills
+# dawood-skills
 
 ماركت بليس بلوقنز مهاراتي. كل بلوقن في مجلد تحت `plugins/`.
 
@@ -17,10 +17,10 @@ English: [README.en.md](README.en.md)
 
 ```
 /plugin marketplace add EngDawood/dawood-claude-skills
-/plugin install freelance-tools@dawood-claude-skills
-/plugin install google-forms-script-generator@dawood-claude-skills
-/plugin install user-docx@dawood-claude-skills
-/plugin install arabic-docx-pptx@dawood-claude-skills
+/plugin install freelance-tools@dawood-skills
+/plugin install google-forms-script-generator@dawood-skills
+/plugin install user-docx@dawood-skills
+/plugin install arabic-docx-pptx@dawood-skills
 ```
 
 ## مزامنة arabic-docx-pptx

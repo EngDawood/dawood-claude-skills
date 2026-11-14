@@ -1,4 +1,4 @@
-# dawood-claude-skills
+# dawood-skills
 
 A plugin marketplace for my skills. Each plugin lives in its own folder under `plugins/`.
 
@@ -17,10 +17,10 @@ A plugin marketplace for my skills. Each plugin lives in its own folder under `p
 
 ```
 /plugin marketplace add EngDawood/dawood-claude-skills
-/plugin install freelance-tools@dawood-claude-skills
-/plugin install google-forms-script-generator@dawood-claude-skills
-/plugin install user-docx@dawood-claude-skills
-/plugin install arabic-docx-pptx@dawood-claude-skills
+/plugin install freelance-tools@dawood-skills
+/plugin install google-forms-script-generator@dawood-skills
+/plugin install user-docx@dawood-skills
+/plugin install arabic-docx-pptx@dawood-skills
 ```
 
 ## arabic-docx-pptx sync

@@ -1,6 +1,9 @@
 {
-  "name": "dawood-claude-skills",
-  "owner": { "name": "EngDawood" },
+  "name": "dawood-skills",
+  "owner": {
+    "name": "EngDawood",
+    "url": "https://engdawood.com"
+  },
   "plugins": [
     {
       "name": "freelance-tools",

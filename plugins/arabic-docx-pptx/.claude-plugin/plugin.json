@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "description": "Arabic right-to-left Word and PowerPoint: Claude Doc to .docx (Saudi thesis style, APA 7 for English) and Arabic RTL decks. Synced from the source repos by a GitHub Action.",
   "author": {
-    "name": "EngDawood"
+    "name": "EngDawood",
+    "url": "https://engdawood.com"
   },
   "license": "MIT",
   "keywords": [
@@ -14,5 +15,6 @@
     "word",
     "powerpoint",
     "عربي"
-  ]
+  ],
+  "homepage": "https://engdawood.com"
 }
