@@ -1,0 +1,7 @@
+{
+  "name": "user-docx",
+  "version": "0.1.0",
+  "description": "Create and edit Word (.docx) files: OpenXML SDK creation, WIR engine for edits, comments and tracked changes, Markdown to Word.",
+  "author": { "name": "EngDawood" },
+  "license": "MIT"
+}

@@ -1,0 +1,34 @@
+name: Sync arabic-docx-pptx
+
+on:
+  schedule:
+    - cron: "17 5 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-arabic-docx-pptx
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Copy skills from the source repos
+        run: .github/scripts/sync-arabic-docx-pptx.sh
+
+      - name: Commit and push if anything changed
+        run: |
+          if [ -z "$(git status --porcelain plugins/arabic-docx-pptx)" ]; then
+            echo "Already up to date."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add plugins/arabic-docx-pptx
+          git commit -m "arabic-docx-pptx: sync from source repos"
+          git push
