@@ -1,0 +1,11 @@
+{
+  "name": "freelance-tools",
+  "version": "0.4.0",
+  "description": "Daily freelance skills: project analyzer and pre-delivery file check.",
+  "author": {
+    "name": "EngDawood",
+    "url": "https://engdawood.com"
+  },
+  "license": "MIT",
+  "homepage": "https://engdawood.com"
+}

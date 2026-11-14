@@ -1,11 +1,29 @@
 {
-  "name": "dawood-claude-skills",
-  "owner": { "name": "EngDawood" },
+  "name": "dawood-skills",
+  "owner": {
+    "name": "EngDawood",
+    "url": "https://engdawood.com"
+  },
   "plugins": [
     {
       "name": "freelance-tools",
-      "source": "./",
-      "description": "Daily freelance skills: Google Forms script generator, project analyzer, deliverable check and Word (.docx) tools."
+      "source": "./plugins/freelance-tools",
+      "description": "Daily freelance skills: project analyzer and pre-delivery file check."
+    },
+    {
+      "name": "google-forms-script-generator",
+      "source": "./plugins/google-forms-script-generator",
+      "description": "Turns survey questions into a Google Apps Script that builds the Google Form."
+    },
+    {
+      "name": "user-docx",
+      "source": "./plugins/user-docx",
+      "description": "Create and edit Word (.docx) files, including comments, tracked changes and Markdown to Word."
+    },
+    {
+      "name": "arabic-docx-pptx",
+      "source": "./plugins/arabic-docx-pptx",
+      "description": "Arabic RTL Word and PowerPoint: Claude Doc to .docx and Arabic decks. Synced from the source repos."
     }
   ]
 }

@@ -12,7 +12,7 @@ import zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT / "skills" / "deliverable-check" / "scripts"))
+sys.path.insert(0, str(ROOT / "plugins" / "freelance-tools" / "skills" / "deliverable-check" / "scripts"))
 import deliverable_check as dc  # noqa: E402
 
 W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"

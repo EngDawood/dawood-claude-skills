@@ -1,6 +1,6 @@
 # brief.md format
 
-project-analyzer writes this file when Dawood asks for it; deliverable-check reads it. The same template lives in `skills/project-analyzer/references/brief-format.md` in this repo, so change both together.
+project-analyzer writes this file when Dawood asks for it; deliverable-check reads it. The same template lives in `plugins/freelance-tools/skills/project-analyzer/references/brief-format.md` in this repo, so change both together.
 
 ```markdown
 # Brief: <project title>
