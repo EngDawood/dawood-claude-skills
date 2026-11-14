@@ -20,7 +20,9 @@ sync_skill() { # url skill-name
   [ -f "$dir/skills/$skill/SKILL.md" ] || { echo "missing skills/$skill/SKILL.md in $url" >&2; exit 1; }
   rm -rf "$PLUGIN/skills/$skill"
   cp -a "$dir/skills/$skill" "$PLUGIN/skills/$skill"
-  printf -- '- `%s` from %s at `%s`\n' "$skill" "${url%.git}" "$(git -C "$dir" rev-parse --short HEAD)"
+  local ver
+  ver="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("version") or "none")' "$dir/.claude-plugin/plugin.json" 2>/dev/null || echo none)"
+  printf -- '- `%s` from %s at `%s` (source version: %s)\n' "$skill" "${url%.git}" "$(git -C "$dir" rev-parse --short HEAD)" "$ver"
 }
 
 {
@@ -33,14 +35,24 @@ sync_skill() { # url skill-name
 } > "$TMP/SOURCES.md"
 cp "$TMP/SOURCES.md" "$PLUGIN/SOURCES.md"
 
-if [ -n "$(git -C "$ROOT" status --porcelain -- plugins/arabic-docx-pptx/skills)" ] && [ "$tracked" -gt 0 ]; then
-  python3 - "$PLUGIN/.claude-plugin/plugin.json" <<'PY'
+changed=0
+if [ -n "$(git -C "$ROOT" status --porcelain -- plugins/arabic-docx-pptx/skills)" ] && [ "$tracked" -gt 0 ]; then changed=1; fi
+
+# Version: add 0.1.0 when plugin.json has none; otherwise bump the patch number when skills changed.
+python3 - "$PLUGIN/.claude-plugin/plugin.json" "$changed" <<'PY'
 import json, sys
-p = sys.argv[1]
+p, changed = sys.argv[1], sys.argv[2] == "1"
 d = json.load(open(p, encoding="utf-8"))
-a, b, c = d["version"].split(".")
-d["version"] = f"{a}.{b}.{int(c) + 1}"
-open(p, "w", encoding="utf-8").write(json.dumps(d, ensure_ascii=False, indent=2) + "\n")
-print("version ->", d["version"])
+old = d.get("version")
+if not old:
+    d["version"] = "0.1.0"
+elif changed:
+    a, b, c = old.split(".")
+    d["version"] = f"{a}.{b}.{int(c) + 1}"
+if d.get("version") != old:
+    # keep "version" right after "name"
+    out = {"name": d["name"], "version": d["version"]}
+    out.update({k: v for k, v in d.items() if k not in out})
+    open(p, "w", encoding="utf-8").write(json.dumps(out, ensure_ascii=False, indent=2) + "\n")
+    print("version:", old, "->", d["version"])
 PY
-fi

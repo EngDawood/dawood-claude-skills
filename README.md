@@ -30,7 +30,7 @@ English: [README.en.md](README.en.md)
 - [claude-doc-to-docx-arabic](https://github.com/EngDawood/claude-doc-to-docx-arabic) إلى `skills/doc-to-word-rtl`
 - [arabic-pptx-skill](https://github.com/EngDawood/arabic-pptx-skill) (الاسم الحالي للريبو claude-slide-to-pptx-arabic) إلى `skills/arabic-pptx`
 
-إن تغيّر شيء يرفع commit على الفرع الرئيسي ويزيد رقم الإصدار (patch) في `plugin.json`، لأن تحديث البلوقن عند المستخدمين يحتاج رقماً جديداً. لا تعدّل المهارتين هنا، عدّلهما في ريبو المصدر. التشغيل محلياً: `.github/scripts/sync-arabic-docx-pptx.sh`.
+إن تغيّر شيء يرفع commit على الفرع الرئيسي ويزيد رقم الإصدار (patch) في `plugin.json`، لأن تحديث البلوقن عند المستخدمين يحتاج رقماً جديداً. وإن لم يجد `version` في `plugin.json` أضافه (0.1.0). ويسجّل في `SOURCES.md` نسخة كل ريبو مصدر. لا تعدّل المهارتين هنا، عدّلهما في ريبو المصدر. التشغيل محلياً: `.github/scripts/sync-arabic-docx-pptx.sh`.
 
 ## فاحص الفخاخ
 

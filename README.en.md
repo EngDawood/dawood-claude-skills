@@ -30,7 +30,7 @@ A plugin marketplace for my skills. Each plugin lives in its own folder under `p
 - [claude-doc-to-docx-arabic](https://github.com/EngDawood/claude-doc-to-docx-arabic) into `skills/doc-to-word-rtl`
 - [arabic-pptx-skill](https://github.com/EngDawood/arabic-pptx-skill) (the current name of the claude-slide-to-pptx-arabic repo) into `skills/arabic-pptx`
 
-When something changed it commits to the default branch and bumps the patch version in `plugin.json`, because installed plugins only update on a new version. Do not edit these two skills here; edit them in their source repos. Run locally with `.github/scripts/sync-arabic-docx-pptx.sh`.
+When something changed it commits to the default branch and bumps the patch version in `plugin.json`, because installed plugins only update on a new version. If `plugin.json` has no `version`, it adds 0.1.0. `SOURCES.md` records each source repo's version. Do not edit these two skills here; edit them in their source repos. Run locally with `.github/scripts/sync-arabic-docx-pptx.sh`.
 
 ## Brief scanner
 
