@@ -37,6 +37,8 @@ INJECTION = re.compile(
 TRAP = re.compile(
     r"(?i)(?:word|phrase|term|sentence|كلمة|عبارة|جملة)s?\s*[:：]?\s*[\"'“”«»‘’]([^\"'“”«»‘’\n]{1,40})[\"'“”«»‘’]")
 
+MIN_HIDDEN_LETTERS = 8  # PDF only: shorter hidden runs are usually math symbols
+
 W = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
 A = "{http://schemas.openxmlformats.org/drawingml/2006/main}"
 P = "{http://schemas.openxmlformats.org/presentationml/2006/main}"
@@ -154,8 +156,10 @@ def scan_pdf(path, out):
                 if reason and reason == why:
                     buf.append(ch["text"])
                     continue
-                if why and "".join(buf).strip():
-                    add(out, "hidden", f"page {i}", why, "".join(buf))
+                run = "".join(buf)
+                # equation sub/superscripts and symbols are short; planted text is a phrase
+                if why and sum(c.isalpha() for c in run) >= MIN_HIDDEN_LETTERS:
+                    add(out, "hidden", f"page {i}", why, run)
                 buf, why = ([ch["text"]] if reason else []), reason
     return full
 
