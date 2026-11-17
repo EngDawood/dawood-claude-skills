@@ -13,6 +13,7 @@ A plugin marketplace for my skills. Each plugin lives in its own folder under `p
 | user-docx | user-docx | Creates and edits Word files, including comments, tracked changes and Markdown to Word. |
 | arabic-docx-pptx | doc-to-word-rtl, arabic-pptx | Arabic right-to-left Word and PowerPoint. Its skills are copied automatically from the source repos (see below). |
 | find-oss-alternative | find-oss-alternative | Finds open-source alternatives to a product, tool or feature before building from scratch, with a Use / Borrow / Avoid / Build New recommendation. Its skill is copied automatically from the source repo. |
+| steal-the-code | steal-the-code | Legacy name of find-oss-alternative (the source repo says it is no longer the maintained entry point). Its skill is copied automatically. |
 
 ## Install
 
@@ -23,6 +24,7 @@ A plugin marketplace for my skills. Each plugin lives in its own folder under `p
 /plugin install user-docx@dawood-skills
 /plugin install arabic-docx-pptx@dawood-skills
 /plugin install find-oss-alternative@dawood-skills
+/plugin install steal-the-code@dawood-skills
 ```
 
 ## arabic-docx-pptx sync
@@ -37,6 +39,10 @@ When something changed it commits to the default branch and bumps the patch vers
 ## find-oss-alternative sync
 
 `.github/workflows/sync-find-oss-alternative.yml` runs daily (and on demand from the Actions tab) and copies the skill from [lumpinif/find-oss-alternative](https://github.com/lumpinif/find-oss-alternative) into `skills/find-oss-alternative`, without the assets and docs folders (demo video and report page). Same mechanism as arabic-docx-pptx: commits to the default branch on change, bumps the patch version in `plugin.json`, and records the source version in `SOURCES.md`. Do not edit the skill here. Run locally with `.github/scripts/sync-find-oss-alternative.sh`.
+
+## steal-the-code sync
+
+Same mechanism as find-oss-alternative: `.github/workflows/sync-steal-the-code.yml` copies the skill daily from [lumpinif/steal-the-code](https://github.com/lumpinif/steal-the-code) into `skills/steal-the-code`. Do not edit it here. Run locally with `.github/scripts/sync-steal-the-code.sh`.
 
 ## Brief scanner
 

@@ -29,6 +29,11 @@
       "name": "find-oss-alternative",
       "source": "./plugins/find-oss-alternative",
       "description": "Finds open-source alternatives before building from scratch. Synced from the source repo."
+    },
+    {
+      "name": "steal-the-code",
+      "source": "./plugins/steal-the-code",
+      "description": "Legacy name of find-oss-alternative. Synced from the source repo."
     }
   ]
 }

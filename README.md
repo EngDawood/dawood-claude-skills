@@ -13,6 +13,7 @@ English: [README.en.md](README.en.md)
 | user-docx | user-docx | إنشاء ملفات Word وتعديلها، مع التعليقات والتعديلات المتتبعة وتحويل Markdown إلى Word. |
 | arabic-docx-pptx | doc-to-word-rtl, arabic-pptx | وورد وبوربوينت بالعربي من اليمين لليسار. تُنسخ مهاراته تلقائياً من ريبوهات المصدر (انظر أدناه). |
 | find-oss-alternative | find-oss-alternative | البحث عن بدائل مفتوحة المصدر لمنتج أو أداة أو ميزة قبل البناء من الصفر، مع توصية: استخدم / استعر / تجنّب / ابنِ جديداً. تُنسخ مهارته تلقائياً من ريبو المصدر. |
+| steal-the-code | steal-the-code | الاسم القديم لـ find-oss-alternative (ريبو المصدر يعلن أنه لم يعد المرجع المحدَّث). تُنسخ مهارته تلقائياً. |
 
 ## التثبيت
 
@@ -23,6 +24,7 @@ English: [README.en.md](README.en.md)
 /plugin install user-docx@dawood-skills
 /plugin install arabic-docx-pptx@dawood-skills
 /plugin install find-oss-alternative@dawood-skills
+/plugin install steal-the-code@dawood-skills
 ```
 
 ## مزامنة arabic-docx-pptx
@@ -37,6 +39,10 @@ English: [README.en.md](README.en.md)
 ## مزامنة find-oss-alternative
 
 الملف `.github/workflows/sync-find-oss-alternative.yml` يعمل يومياً (ويدوياً من تبويب Actions) وينسخ المهارة من [lumpinif/find-oss-alternative](https://github.com/lumpinif/find-oss-alternative) إلى `skills/find-oss-alternative`، دون مجلدي assets وdocs (فيديو العرض وصفحة التقرير). نفس آلية arabic-docx-pptx: commit على الفرع الرئيسي عند التغيير، ورفع رقم patch في `plugin.json`، وتسجيل النسخة في `SOURCES.md`. لا تعدّل المهارة هنا. التشغيل محلياً: `.github/scripts/sync-find-oss-alternative.sh`.
+
+## مزامنة steal-the-code
+
+نفس آلية find-oss-alternative بالضبط: `.github/workflows/sync-steal-the-code.yml` ينسخ المهارة يومياً من [lumpinif/steal-the-code](https://github.com/lumpinif/steal-the-code) إلى `skills/steal-the-code`. لا تعدّلها هنا. التشغيل محلياً: `.github/scripts/sync-steal-the-code.sh`.
 
 ## فاحص الفخاخ
 

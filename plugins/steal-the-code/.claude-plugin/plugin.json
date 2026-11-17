@@ -1,0 +1,17 @@
+{
+  "name": "steal-the-code",
+  "version": "0.1.0",
+  "description": "Legacy name of find-oss-alternative: finds open-source precedents before building from scratch. Synced from the source repo by a GitHub Action.",
+  "author": {
+    "name": "EngDawood",
+    "url": "https://engdawood.com"
+  },
+  "license": "MIT",
+  "keywords": [
+    "open-source",
+    "alternatives",
+    "research",
+    "legacy"
+  ],
+  "homepage": "https://github.com/lumpinif/steal-the-code"
+}

@@ -1,0 +1,34 @@
+name: Sync steal-the-code
+
+on:
+  schedule:
+    - cron: "53 5 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-steal-the-code
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Copy the skill from the source repo
+        run: .github/scripts/sync-steal-the-code.sh
+
+      - name: Commit and push if anything changed
+        run: |
+          if [ -z "$(git status --porcelain plugins/steal-the-code)" ]; then
+            echo "Already up to date."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add plugins/steal-the-code
+          git commit -m "steal-the-code: sync from source repo"
+          git push
