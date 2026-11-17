@@ -12,6 +12,7 @@ English: [README.en.md](README.en.md)
 | google-forms-script-generator | google-forms-script-generator | تحويل أسئلة استبيان إلى سكربت Apps Script يبني Google Form. |
 | user-docx | user-docx | إنشاء ملفات Word وتعديلها، مع التعليقات والتعديلات المتتبعة وتحويل Markdown إلى Word. |
 | arabic-docx-pptx | doc-to-word-rtl, arabic-pptx | وورد وبوربوينت بالعربي من اليمين لليسار. تُنسخ مهاراته تلقائياً من ريبوهات المصدر (انظر أدناه). |
+| find-oss-alternative | find-oss-alternative | البحث عن بدائل مفتوحة المصدر لمنتج أو أداة أو ميزة قبل البناء من الصفر، مع توصية: استخدم / استعر / تجنّب / ابنِ جديداً. تُنسخ مهارته تلقائياً من ريبو المصدر. |
 
 ## التثبيت
 
@@ -21,6 +22,7 @@ English: [README.en.md](README.en.md)
 /plugin install google-forms-script-generator@dawood-skills
 /plugin install user-docx@dawood-skills
 /plugin install arabic-docx-pptx@dawood-skills
+/plugin install find-oss-alternative@dawood-skills
 ```
 
 ## مزامنة arabic-docx-pptx
@@ -31,6 +33,10 @@ English: [README.en.md](README.en.md)
 - [arabic-pptx-skill](https://github.com/EngDawood/arabic-pptx-skill) (الاسم الحالي للريبو claude-slide-to-pptx-arabic) إلى `skills/arabic-pptx`
 
 إن تغيّر شيء يرفع commit على الفرع الرئيسي ويزيد رقم الإصدار (patch) في `plugin.json`، لأن تحديث البلوقن عند المستخدمين يحتاج رقماً جديداً. وإن لم يجد `version` في `plugin.json` أضافه (0.1.0). ويسجّل في `SOURCES.md` نسخة كل ريبو مصدر. لا تعدّل المهارتين هنا، عدّلهما في ريبو المصدر. التشغيل محلياً: `.github/scripts/sync-arabic-docx-pptx.sh`.
+
+## مزامنة find-oss-alternative
+
+الملف `.github/workflows/sync-find-oss-alternative.yml` يعمل يومياً (ويدوياً من تبويب Actions) وينسخ المهارة من [lumpinif/find-oss-alternative](https://github.com/lumpinif/find-oss-alternative) إلى `skills/find-oss-alternative`، دون مجلدي assets وdocs (فيديو العرض وصفحة التقرير). نفس آلية arabic-docx-pptx: commit على الفرع الرئيسي عند التغيير، ورفع رقم patch في `plugin.json`، وتسجيل النسخة في `SOURCES.md`. لا تعدّل المهارة هنا. التشغيل محلياً: `.github/scripts/sync-find-oss-alternative.sh`.
 
 ## فاحص الفخاخ
 

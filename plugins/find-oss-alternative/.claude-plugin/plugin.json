@@ -1,0 +1,17 @@
+{
+  "name": "find-oss-alternative",
+  "version": "0.1.0",
+  "description": "Finds open-source alternatives to a product, tool or feature before building from scratch, with a Use / Borrow / Avoid / Build New recommendation. Synced from the source repo by a GitHub Action.",
+  "author": {
+    "name": "EngDawood",
+    "url": "https://engdawood.com"
+  },
+  "license": "MIT",
+  "keywords": [
+    "open-source",
+    "alternatives",
+    "research",
+    "oss"
+  ],
+  "homepage": "https://github.com/lumpinif/find-oss-alternative"
+}

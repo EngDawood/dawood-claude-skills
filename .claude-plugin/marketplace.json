@@ -24,6 +24,11 @@
       "name": "arabic-docx-pptx",
       "source": "./plugins/arabic-docx-pptx",
       "description": "Arabic RTL Word and PowerPoint: Claude Doc to .docx and Arabic decks. Synced from the source repos."
+    },
+    {
+      "name": "find-oss-alternative",
+      "source": "./plugins/find-oss-alternative",
+      "description": "Finds open-source alternatives before building from scratch. Synced from the source repo."
     }
   ]
 }
