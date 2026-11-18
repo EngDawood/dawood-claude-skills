@@ -1,6 +1,12 @@
 ---
 name: google-forms-script-generator
 description: Convert a set of survey/questionnaire questions (in any language, any format, any source document) into a Google Apps Script (.gs) file that builds the equivalent Google Form. Use whenever the user wants questions turned into a Google Form script, mentions FormApp, .gs files, or asks to "convert this survey/questionnaire to a Google Form." This skill mirrors whatever structure, question types, numbering, and formatting the user's source material already has — it does not impose a fixed style, so use it any time regardless of how the input questions are written.
+license: MIT
+metadata:
+  author: Dawood Saleh
+  author_url: https://engdawood.com
+  version: '0.1.0'
+  repository: https://github.com/EngDawood/dawood-claude-skills
 ---
 
 # Google Forms Script Generator

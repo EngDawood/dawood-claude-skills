@@ -1,6 +1,12 @@
 ---
 name: user-docx
 description: "Create and edit Word documents (.docx) — C# + OpenXML SDK for creation, WIR engine for editing/comments/tracked changes. Use for any .docx task including document creation, editing, comments, revisions, footnotes, TOC, and Markdown-to-Word conversion."
+license: MIT
+metadata:
+  author: Dawood Saleh
+  author_url: https://engdawood.com
+  version: '0.1.0'
+  repository: https://github.com/EngDawood/dawood-claude-skills
 ---
 
 # Part 1: Routing
