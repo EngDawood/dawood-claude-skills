@@ -5,6 +5,12 @@ description: >
   الناقص، من ينفذ كل جزء وبأي أداة، تقدير الوقت، ورد واتساب جاهز للعميل. يعتمد على المطلوب المرفق فقط
   ولا يبحث في الذاكرة ولا في المحادثات السابقة. استخدمها عندما يرفق داوود مطلوب مشروع أو يقول "حلل"،
   "شو المطلوب"، "كيف أسويه"، "analyze this project"، أو يرفق PDF أو Word أو صورة تبدو واجباً جديداً.
+license: MIT
+metadata:
+  author: Dawood Saleh
+  author_url: https://engdawood.com
+  version: '0.4.0'
+  repository: https://github.com/EngDawood/dawood-claude-skills
 ---
 
 # Project Analyzer
