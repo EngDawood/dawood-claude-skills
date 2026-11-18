@@ -14,7 +14,7 @@ Turn a Claude Doc into a .docx that opens in Word already in its **house style**
 
 The doc's language is the one most of its prose is written in; the client's instructions win when they name a style.
 
-**Formal report.** When the user asks for a cover page, a table of contents or an APA reference list ("docx فورمال", "غلاف + فهرس"), the scripts below do not add them. Read `references/formal-layout.md` first and build with docx-js following it; the bidi, pagination and TOC rules there come from renders that failed.
+**Cover, contents, equations (Arabic script).** `md_to_docx_rtl.py` builds them itself. Everything before the first `##` heading becomes a centered cover page on its own page; a contents page follows (a live Word TOC field of the `##` and `###` headings, filled by Word when the file opens); the body starts in a new section numbered from 1. `$$…$$`, `\[…\]`, a line that is only `$…$`, and a bare formula line such as `Z = 3.3X_1 + 1.2X_2` become native Word equations, never plain text. Read `references/formal-layout.md` only for what the script still lacks: an APA reference list for an Arabic report, charts drawn from data, or a contents page with its page numbers already written in for readers who open the file outside Word.
 
 Build the final file with the script. The connector's own `docx` export carries no bidi settings, so its Arabic tables and paragraphs come out mirrored.
 
@@ -29,15 +29,17 @@ Build the final file with the script. The connector's own `docx` export carries 
    - Write `<scratch>/images.json` as a list of `{"alt": "<alt or caption>", "path": "<file>"}` in the order they appear.
    Done when the list holds one entry per dropped picture and chart.
 4. **Pick the script.** `<base dir>/scripts/<script>`, where `<base dir>` is the "Base directory for this skill" line shown when this skill loads and `<script>` is the one for the doc's language. Run it in place (`pip install python-docx --break-system-packages` if the import fails). Done when `python3 <base dir>/scripts/<script> -h` prints usage.
-5. **Convert.** `python3 <base dir>/scripts/<script> <input> "<doc title>.docx" [--images <scratch>/images.json] [options]`, passing an option for every client-template value that differs from the house style. Done when the script prints `OK -> ...` and `images: N embedded, 0 missing` for every tab; `direction: LTR` from the Arabic script on an Arabic doc means the script is damaged: stop and tell the user.
-6. **Verify.** `soffice --headless --convert-to pdf`, then `pdftoppm -r 60 -png` and view a body page, a table page, a numbered-list page, and a page with a picture when there is one. Done when every page viewed passes every check:
+5. **Convert.** `python3 <base dir>/scripts/<script> <input> "<doc title>.docx" [--images <scratch>/images.json] [options]`, passing an option for every client-template value that differs from the house style. Done when the script prints `OK -> ...` and `images: N embedded, 0 missing` for every tab, and (Arabic) `cover+contents: yes` when the doc has a cover block before its first `##`, and an `equations:` count equal to the formulas in the doc; `direction: LTR` from the Arabic script on an Arabic doc means the script is damaged: stop and tell the user.
+6. **Verify.** `soffice --headless --convert-to pdf` (set `HOME=/tmp SAL_USE_VCLPLUGIN=svp` when it complains about a display), then `pdftoppm -r 60 -png` and view the cover page, the contents page, a body page, a table page, a numbered-list page, a page with a formula, and a page with a picture when there is one. Done when every page viewed passes every check:
    - layout matches the house-style table for the doc's language (Arabic: first table column on the right, grey header row; English: rules only above, below the header and at the bottom of tables);
-   - headings placed per the house style (right-aligned Arabic headings sit on the right edge);
+   - the cover sits alone on page 1, the contents page follows, and the body's first page is numbered 1 (LibreOffice shows the contents hint line instead of entries; Word fills the entries on open);
+   - headings placed per the house style (right-aligned Arabic headings sit on the right edge), and a multi-level number such as 2.1 shows the main number 2 on the right;
+   - every formula is a centered equation with real subscripts, with no leftover `_`, `\`, or `$`;
    - each picture centered within the margins, its caption under it;
    - each numbered list starts at 1;
    - no box glyphs or reversed words.
    The render box usually lacks Traditional Arabic and substitutes a fallback face; judge layout, not typeface.
-7. **Deliver.** SendUserFile, file named after the doc title. Name anything still missing (comments, a picture that could not be fetched) so the user can add it by hand.
+7. **Deliver.** SendUserFile, file named after the doc title. Tell the user that Word asks to update fields when the file opens: answering Yes fills the contents with page numbers. Name anything still missing (comments, a picture that could not be fetched, cover placeholders) so the user can add it by hand.
 8. **Lesson.** Every run that hit a defect (a failed step, a wrong render, a user correction to the output) ends with a lesson for this skill. Done when each defect is either fixed in the skill's source or the user declined the fix:
    - Name the defect and its root cause in one line each, then propose the smallest change that prevents it: the script, the house-style table, or a step here.
    - Make the change only after the user approves the proposal.
@@ -52,11 +54,16 @@ Taken from a hand-formatted Saudi master's thesis chapter.
 | Element | Style | Option |
 |---|---|---|
 | Page | A4, margins 2.54 cm, centered page number | `--paper`, `--margins` |
+| Cover page | every block before the first `##` (university, college, title, names table…), centered, alone on page 1, no page number; added when there is more than the title | `--cover auto/on/off` |
+| Contents page | page 2, title فهرس المحتويات, a TOC field of `##`–`###` with dot leaders, filled by Word on open (`updateFields`) | `--toc auto/on/off`, `--toc-levels`, `--toc-title` |
+| Body page numbers | new section after the contents, numbering starts at 1 | |
 | Body | Traditional Arabic 16, colour 0D0D0D, justified, line 1.08, 8 pt after | `--ar-font`, `--en-font`, `--size`, `--color`, `--line` |
 | `#` | 22 bold, centered; Title style, so it stays out of the table of contents | derives from `--size` |
 | `##` | 18 bold | derives from `--size` |
 | `###` | 16 bold | derives from `--size` |
 | Heading alignment | centered when it opens with المحور / الفصل / مراجع / المراجع; right otherwise (أولاً، 1.، خلاصة) | `CENTER_H_RE` in script |
+| Multi-level heading number (2.1, 5.3.2) | RLM on both sides of each dot, so the main number sits on the right in Arabic reading order | `number_rtl` in script |
+| Equations | native Word equations (OMML), Cambria Math 14, centered, left-to-right; LaTeX subset: `_` `^` `\frac` `\sqrt` `\text` `\approx` `\times` `\div` `\le` `\ge` Greek letters | `--math-size` |
 | Caption `جدول (n): …` | 16 bold centered, kept with the table | |
 | Table | full width, 14 pt, header bold on E7E6E6 repeated each page, rows unsplit, cells vertically centered, text right, numbers centered | `--table-size` |
 | After a table | 10 pt space before the next paragraph | |
@@ -66,7 +73,7 @@ Taken from a hand-formatted Saudi master's thesis chapter.
 | Pictures and charts | centered, scaled to the text width (at most 18 cm tall); a chart's caption under it | `--images` |
 | Right-aligned text | no `jc` set, so Word aligns it to the start (right) of the RTL line; `jc="right"` would land on the left | |
 | `date · @name` line under the title | removed | `--keep-byline` |
-| `---` | page break | |
+| `---` | page break (dropped when it ends the cover, so no blank page) | |
 
 ## English house style (`md_to_docx_en.py`, APA 7)
 

@@ -4,13 +4,20 @@ Claude Doc markdown export -> house-style RTL .docx.
 
 Usage: python3 md_to_docx_rtl.py INPUT OUTPUT.docx [options]
 INPUT: a .md file, or the JSON file Claude Docs `export` saves ({"data": {"bytes_b64": ...}}).
+
+Front matter: everything before the first `##` heading is the cover page. It is centered and
+ends with a page break; a table of contents page follows (a live Word TOC field that Word fills
+on open), then the body starts in a new section whose page numbers start at 1.
+Equations: `$$...$$`, `\\[...\\]`, a line that is only `$...$`, and a bare formula line such as
+`Z = 3.3X_1 + 1.2X_2` become native Word equations (OMML), not plain text.
 """
-import argparse, base64, json, os, re, sys
+import argparse, base64, json, os, re, sys, unicodedata
 from docx import Document
-from docx.enum.section import WD_ORIENT
+from docx.enum.section import WD_ORIENT, WD_SECTION
+from docx.enum.style import WD_STYLE_TYPE
 from docx.enum.table import WD_TABLE_ALIGNMENT
 from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_BREAK
-from docx.oxml import OxmlElement
+from docx.oxml import OxmlElement, parse_xml
 from docx.oxml.ns import qn
 from docx.shared import Cm, Pt, RGBColor
 
@@ -18,14 +25,19 @@ from docx.shared import Cm, Pt, RGBColor
 _AR_RANGES = [(0x0600, 0x06FF), (0x0750, 0x077F), (0x08A0, 0x08FF), (0xFB50, 0xFDFF), (0xFE70, 0xFEFF)]
 AR_RE = re.compile('[' + ''.join(re.escape(chr(a)) + '-' + re.escape(chr(b)) for a, b in _AR_RANGES) + ']')
 LATIN_RE = re.compile(r'[A-Za-z]')
+RLM = chr(0x200F)
 BYLINE_RE = re.compile(r'^\s*([A-Z][a-z]{2} \d{1,2}, \d{4}|\d{4}-\d{2}-\d{2})?\s*(·\s*)?(@\S+\s*)*$')
 INLINE_RE = re.compile(r'(\*\*[^*]+\*\*|__[^_]+__|\*[^*\s][^*]*\*|`[^`]+`|\[[^\]]+\]\([^)]+\))')
 CENTER_H_RE = re.compile(r'^(المحور|الفصل|مراجع|المراجع|قائمة|ملخص|Chapter|References|Abstract)')
 CAPTION_RE = re.compile(r'^(جدول|شكل|الجدول|الشكل|Table|Figure)\s*\(?\s*\d')
+# Multi-level heading number at the start of a heading: 2.1, 5.3.2 ...
+HNUM_RE = re.compile(r'^(\d+(?:\.\d+)+)(?=[\s.):-])')
 # Start-aligned = no jc at all. In a right-to-left paragraph Word reads jc="right" as the line's
 # end, i.e. the LEFT edge; leaving jc unset aligns to the start, which is the right edge.
 START = None
 SOURCE_RE = re.compile(r'^(المصدر|Source)\s*:')
+M_NS = 'http://schemas.openxmlformats.org/officeDocument/2006/math'
+W_NS = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'
 
 
 def load_markdown(path):
@@ -153,6 +165,43 @@ def add_page_number(section, cfg):
     style_run(run, cfg, False, size=11)
 
 
+def sect_bidi(sectPr):
+    """w:bidi in schema order (before textDirection/rtlGutter/docGrid), so Word does not repair the file."""
+    if sectPr.find(qn('w:bidi')) is not None:
+        return
+    b = OxmlElement('w:bidi')
+    for tag in ('w:textDirection', 'w:rtlGutter', 'w:docGrid', 'w:printerSettings'):
+        el = sectPr.find(qn(tag))
+        if el is not None:
+            el.addprevious(b); return
+    sectPr.append(b)
+
+
+def restart_page_numbers(sectPr, start=1):
+    pg = sectPr.find(qn('w:pgNumType'))
+    if pg is None:
+        pg = OxmlElement('w:pgNumType')
+        anchor = sectPr.find(qn('w:pgMar'))
+        if anchor is not None:
+            anchor.addnext(pg)
+        else:
+            sectPr.append(pg)
+    pg.set(qn('w:start'), str(start))
+
+
+def style_fonts(style, cfg):
+    st_rPr = style.element.get_or_add_rPr()
+    f = st_rPr.find(qn('w:rFonts'))
+    if f is None:
+        f = OxmlElement('w:rFonts'); st_rPr.insert(0, f)
+    for a in ('ascii', 'hAnsi', 'eastAsia'):
+        f.set(qn(f'w:{a}'), cfg.en_font)
+    f.set(qn('w:cs'), cfg.ar_font)
+    for a in ('w:asciiTheme', 'w:hAnsiTheme', 'w:eastAsiaTheme', 'w:cstheme'):
+        if f.get(qn(a)) is not None:
+            del f.attrib[qn(a)]
+
+
 def setup_document(cfg):
     doc = Document()
     sec = doc.sections[0]
@@ -164,7 +213,7 @@ def setup_document(cfg):
     for side in ('left_margin', 'right_margin', 'top_margin', 'bottom_margin'):
         setattr(sec, side, Cm(cfg.margins))
     if cfg.doc_rtl:
-        sec._sectPr.append(OxmlElement('w:bidi'))
+        sect_bidi(sec._sectPr)
     st = doc.styles['Normal']
     st.font.name = cfg.en_font; st.font.size = Pt(cfg.size)
     rPr = st.element.get_or_add_rPr()
@@ -180,16 +229,7 @@ def setup_document(cfg):
         hs = doc.styles[f'Heading {lvl}']
         hs.font.size = Pt(sz); hs.font.bold = True; hs.font.color.rgb = RGBColor.from_string(cfg.color)
         hs.font.name = cfg.en_font
-        hr = hs.element.get_or_add_rPr()
-        f = hr.find(qn('w:rFonts'))
-        if f is None:
-            f = OxmlElement('w:rFonts'); hr.insert(0, f)
-        for a in ('ascii', 'hAnsi', 'eastAsia'):
-            f.set(qn(f'w:{a}'), cfg.en_font)
-        f.set(qn('w:cs'), cfg.ar_font)
-        for a in ('w:asciiTheme', 'w:hAnsiTheme', 'w:eastAsiaTheme', 'w:cstheme'):
-            if f.get(qn(a)) is not None:
-                del f.attrib[qn(a)]
+        style_fonts(hs, cfg)
     # Document title uses the built-in Title style: it has no outline level,
     # so it never lands in Word's table of contents (Heading 1 would).
     ts = doc.styles['Title']
@@ -200,22 +240,21 @@ def setup_document(cfg):
         el = tp.find(qn(tag))
         if el is not None:
             tp.remove(el)
-    tr = ts.element.get_or_add_rPr()
-    f = tr.find(qn('w:rFonts'))
-    if f is None:
-        f = OxmlElement('w:rFonts'); tr.insert(0, f)
-    for a in ('ascii', 'hAnsi', 'eastAsia'):
-        f.set(qn(f'w:{a}'), cfg.en_font)
-    f.set(qn('w:cs'), cfg.ar_font)
-    for a in ('w:asciiTheme', 'w:hAnsiTheme', 'w:eastAsiaTheme', 'w:cstheme'):
-        if f.get(qn(a)) is not None:
-            del f.attrib[qn(a)]
-    add_page_number(sec, cfg)
+    style_fonts(ts, cfg)
     return doc
+
+
+def number_rtl(text):
+    """'2.1 title' -> '2<RLM>.<RLM>1 title'. In a right-to-left heading the plain digits run left to
+    right and show as 2.1 read from the left; RLM around each dot makes the main number sit on the
+    right (Arabic reading order), the way a hand-formatted Arabic thesis shows it."""
+    return HNUM_RE.sub(lambda m: (RLM + '.' + RLM).join(m.group(1).split('.')), text)
 
 
 def add_heading(doc, text, level, cfg):
     rtl = is_rtl_text(text, cfg.doc_rtl)
+    if rtl:
+        text = number_rtl(text)
     # '#' is the document title: Title style, kept out of the table of contents
     p = doc.add_paragraph(style='Title' if level == 1 else f'Heading {min(level, 4)}')
     set_par_dir(p, rtl)
@@ -298,6 +337,200 @@ def add_list_item(doc, text, ordered, level, cfg, number):
     add_inline(p, text, cfg, rtl, size=cfg.size)
     p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
     para_spacing(p, cfg, after=4, line=max(cfg.line, 1.16))
+
+
+# ---------------- equations (native Word OMML) ----------------
+MATH_CMD = {'approx': '≈', 'times': '×', 'div': '÷', 'cdot': '·', 'le': '≤', 'leq': '≤', 'ge': '≥',
+            'geq': '≥', 'neq': '≠', 'ne': '≠', 'pm': '±', 'mp': '∓', 'minus': '−', 'sum': '∑',
+            'infty': '∞', 'to': '→', 'rightarrow': '→', 'Rightarrow': '⇒', 'alpha': 'α', 'beta': 'β',
+            'gamma': 'γ', 'delta': 'δ', 'Delta': 'Δ', 'sigma': 'σ', 'Sigma': 'Σ', 'mu': 'μ', 'pi': 'π',
+            'theta': 'θ', 'lambda': 'λ', 'rho': 'ρ', 'epsilon': 'ε', '%': '%', '$': '$', '{': '{', '}': '}'}
+MATH_SKIP = {'left', 'right', 'displaystyle', 'quad', 'qquad', ',', ';', ':', '!', ' ', 'big', 'Big', 'mathrm'}
+# A formula line written without $ delimiters: a symbol, '=', then numbers, symbols and operators only.
+BARE_EQ_RE = re.compile(r"^[A-Za-z][A-Za-z0-9']*(?:_\{?[A-Za-z0-9]+\}?)?\s*(?:\([^)]*\))?\s*="
+                        r"[\sA-Za-z0-9.,+\-−=()\[\]_{}^\\'×÷*/≈<>≤≥·%]+$")
+MD_UNESCAPE_RE = re.compile(r'\\([_*#\-.^~`|()!+=<>])')
+
+
+def _x(t):
+    return t.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+
+
+class Omml:
+    def __init__(self, cfg):
+        sz = str(int(cfg.math_size * 2))
+        self.rpr = (f'<w:rPr><w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>'
+                    f'<w:color w:val="{cfg.color}"/><w:sz w:val="{sz}"/><w:szCs w:val="{sz}"/></w:rPr>')
+        self.text_rpr = (f'<w:rPr><w:rFonts w:ascii="{cfg.en_font}" w:hAnsi="{cfg.en_font}" w:cs="{cfg.ar_font}"/>'
+                         f'<w:color w:val="{cfg.color}"/><w:sz w:val="{sz}"/><w:szCs w:val="{sz}"/><w:rtl/></w:rPr>')
+
+    def run(self, t, normal=False):
+        if normal:
+            return f'<m:r><m:rPr><m:nor/></m:rPr>{self.text_rpr}<m:t xml:space="preserve">{_x(t)}</m:t></m:r>'
+        return f'<m:r>{self.rpr}<m:t>{_x(t)}</m:t></m:r>'
+
+    def parse(self, s):
+        nodes, i, n = [], 0, len(s)
+
+        def group():
+            nonlocal i
+            while i < n and s[i] == ' ':
+                i += 1
+            if i < n and s[i] == '{':
+                d, j = 1, i + 1
+                while j < n and d:
+                    d += {'{': 1, '}': -1}.get(s[j], 0); j += 1
+                inner = s[i + 1:j - 1]; i = j
+                return self.parse(inner)
+            if i < n and s[i] == '\\':
+                m = re.match(r'\\([A-Za-z]+|.)', s[i:]); i += len(m.group(0))
+                return self.run(MATH_CMD.get(m.group(1), m.group(1)))
+            c = s[i] if i < n else ''; i += 1
+            return self.run(c)
+
+        while i < n:
+            c = s[i]
+            if c.isspace():
+                i += 1; continue
+            if c == '\\':
+                m = re.match(r'\\([A-Za-z]+|.)', s[i:]); name = m.group(1); i += len(m.group(0))
+                if name in MATH_SKIP:
+                    continue
+                if name == 'frac':
+                    a, b = group(), group()
+                    nodes.append({'xml': f'<m:f><m:num>{a}</m:num><m:den>{b}</m:den></m:f>'})
+                elif name == 'sqrt':
+                    a = group()
+                    nodes.append({'xml': f'<m:rad><m:radPr><m:degHide m:val="1"/></m:radPr><m:deg/><m:e>{a}</m:e></m:rad>'})
+                elif name in ('text', 'textrm', 'mbox', 'operatorname'):
+                    j = s.find('}', i)
+                    txt = s[i + 1:j] if i < n and s[i] == '{' and j > 0 else ''
+                    i = j + 1 if j > 0 else n
+                    nodes.append({'xml': self.run(txt, normal=bool(AR_RE.search(txt)))})
+                else:
+                    nodes.append({'xml': self.run(MATH_CMD.get(name, name))})
+                continue
+            if c in '_^':
+                i += 1
+                base = nodes.pop() if nodes else {'xml': self.run('')}
+                g = group()
+                if c == '^' and 'sub' in base:
+                    nodes.append({'xml': f'<m:sSubSup><m:e>{base["base"]}</m:e><m:sub>{base["sub"]}</m:sub><m:sup>{g}</m:sup></m:sSubSup>'})
+                elif c == '_':
+                    nodes.append({'xml': f'<m:sSub><m:e>{base["xml"]}</m:e><m:sub>{g}</m:sub></m:sSub>',
+                                  'base': base['xml'], 'sub': g})
+                else:
+                    nodes.append({'xml': f'<m:sSup><m:e>{base["xml"]}</m:e><m:sup>{g}</m:sup></m:sSup>'})
+                continue
+            if c == '{':
+                nodes.append({'xml': group()}); continue
+            if c.isalpha() and c.isascii() or c in 'αβγδΔσΣμπθλρε':
+                j = i + 1
+                while j < n and (s[j].isascii() and s[j].isalpha()):
+                    j += 1
+                while j < n and s[j] == "'":
+                    j += 1
+                nodes.append({'xml': self.run(s[i:j].replace("'", '′'))}); i = j; continue
+            j = i
+            while j < n and not (s[j].isascii() and s[j].isalpha()) and s[j] not in '\\_^{ ':
+                j += 1
+            if j == i:
+                j = i + 1
+            nodes.append({'xml': self.run(s[i:j].replace('-', '−').replace('*', '×'))}); i = j
+        return ''.join(nd['xml'] for nd in nodes)
+
+
+def math_source(s):
+    """Undo markdown escaping and fold math-italic letters (𝑍 -> Z) so the parser sees plain LaTeX."""
+    s = unicodedata.normalize('NFKC', s).replace('′', "'")
+    return MD_UNESCAPE_RE.sub(r'\1', s).strip()
+
+
+def is_bare_equation(s):
+    if AR_RE.search(s):
+        return False
+    t = math_source(s)
+    return bool(BARE_EQ_RE.match(t)) and bool(re.search(r'[\d_\\^]', t.split('=', 1)[1]))
+
+
+def add_equation(doc, src, cfg):
+    p = doc.add_paragraph()
+    set_par_dir(p, False)
+    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    para_spacing(p, cfg, before=4, after=4, line=1.0)
+    p.paragraph_format.keep_with_next = True
+    xml = Omml(cfg).parse(math_source(src))
+    p._p.append(parse_xml(f'<m:oMathPara xmlns:m="{M_NS}" xmlns:w="{W_NS}"><m:oMath>{xml}</m:oMath></m:oMathPara>'))
+    cfg.eq_count += 1
+
+
+# ---------------- cover page and table of contents ----------------
+def toc_styles(doc, cfg):
+    """TOC 1-4 paragraph styles: right-to-left, house font, page number at the far end after dot leaders."""
+    usable = (21.0 if cfg.paper == 'a4' else 21.59) - 2 * cfg.margins
+    pos = str(int(usable / 2.54 * 1440))
+    for lvl in (1, 2, 3, 4):
+        name = f'toc {lvl}'
+        try:
+            st = doc.styles[name]
+        except KeyError:
+            st = doc.styles.add_style(name, WD_STYLE_TYPE.PARAGRAPH)
+            st.element.set(qn('w:styleId'), f'TOC{lvl}')
+        st.base_style = doc.styles['Normal']
+        st.font.size = Pt(cfg.size - 2); st.font.bold = (lvl <= 2)
+        style_fonts(st, cfg)
+        pPr = st.element.get_or_add_pPr()
+        if cfg.doc_rtl and pPr.find(qn('w:bidi')) is None:
+            pPr.append(OxmlElement('w:bidi'))
+        tabs = OxmlElement('w:tabs'); tab = OxmlElement('w:tab')
+        tab.set(qn('w:val'), 'right'); tab.set(qn('w:leader'), 'dot'); tab.set(qn('w:pos'), pos)
+        tabs.append(tab); pPr.append(tabs)
+        sp = OxmlElement('w:spacing'); sp.set(qn('w:before'), '0'); sp.set(qn('w:after'), '60')
+        pPr.append(sp)
+        ind = OxmlElement('w:ind'); ind.set(qn('w:start'), str(max(lvl - 2, 0) * 400)); pPr.append(ind)
+
+
+def add_toc(doc, cfg):
+    p = doc.add_paragraph()
+    set_par_dir(p, cfg.doc_rtl)
+    add_inline(p, cfg.toc_title, cfg, cfg.doc_rtl, size=cfg.size + 2, bold=True)
+    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    para_spacing(p, cfg, before=0, after=12)
+    toc_styles(doc, cfg)
+    p = doc.add_paragraph()
+    set_par_dir(p, cfg.doc_rtl)
+
+    def fld(kind):
+        r = p.add_run(); fc = OxmlElement('w:fldChar'); fc.set(qn('w:fldCharType'), kind)
+        if kind == 'begin':
+            fc.set(qn('w:dirty'), 'true')
+        r._r.append(fc)
+    fld('begin')
+    r = p.add_run(); it = OxmlElement('w:instrText'); it.set(qn('xml:space'), 'preserve')
+    it.text = f' TOC \\o "{cfg.toc_levels}" \\h \\z \\u '; r._r.append(it)
+    fld('separate')
+    r = p.add_run(cfg.toc_hint); style_run(r, cfg, cfg.doc_rtl, size=cfg.size - 2)
+    fld('end')
+    # Word fills every field (the contents with real page numbers) when the file opens.
+    upd = OxmlElement('w:updateFields'); upd.set(qn('w:val'), 'true')
+    doc.settings.element.append(upd)
+
+
+def end_front_matter(doc, cfg):
+    """Cover done: center it, add the contents page, and start the body in a section numbered from 1."""
+    body = doc.element.body
+    # a trailing '---' page break would leave a blank page before the section break
+    last = body[-2] if body[-1].tag == qn('w:sectPr') else body[-1]
+    if last.tag == qn('w:p') and last.find('.//' + qn('w:br')) is not None and not ''.join(last.itertext()).strip():
+        body.remove(last)
+    for p in doc.paragraphs:
+        if p._p.find('.//' + qn('m:oMathPara')) is None:
+            p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    if cfg.toc_on:
+        doc.add_paragraph().add_run().add_break(WD_BREAK.PAGE)
+        add_toc(doc, cfg)
+    doc.add_section(WD_SECTION.NEW_PAGE)
+    cfg.front = True
 
 
 # ---------------- images ----------------
@@ -416,12 +649,34 @@ def add_table(doc, rows, cfg):
     cfg.after_table = True
 
 
+def has_cover(lines):
+    """True when the doc has a cover: a title plus at least one more block before the first '##'."""
+    blocks = 0
+    for line in lines:
+        s = line.strip()
+        if re.match(r'^#{2,6}\s', s):
+            break
+        if not s or s in ('---', '***', '___'):
+            continue
+        if (BYLINE_RE.match(s) and '·' in s) or re.match(r'^@\S+$', s):  # date · @name line
+            continue
+        blocks += 1
+    return blocks >= 2
+
+
 def convert(md, out, cfg):
     doc = setup_document(cfg)
     lines = md.replace('\r\n', '\n').split('\n')
     i, n = 0, len(lines)
     in_refs = False
     ol_counter = 0
+    cover = cfg.cover == 'on' or (cfg.cover == 'auto' and has_cover(lines))
+    cfg.toc_on = cfg.toc == 'on' or (cfg.toc == 'auto' and cover)
+    if cfg.toc_on and not cover:
+        add_toc(doc, cfg)
+        doc.add_section(WD_SECTION.NEW_PAGE)
+        cfg.front = True
+    in_front = cover
     while i < n:
         line = lines[i]
         s = line.strip()
@@ -439,10 +694,34 @@ def convert(md, out, cfg):
             r = p.add_run('\n'.join(buf)); style_run(r, cfg, False, size=10, mono=True)
             p.alignment = WD_ALIGN_PARAGRAPH.LEFT
             continue
+        # display math: $$...$$ (one or more lines), \[...\], a line that is only $...$
+        se = s.replace('\\$', '$')
+        if se.startswith('$$') or se.startswith('\\['):
+            close = '$$' if se.startswith('$$') else '\\]'
+            buf = se[2:]
+            i += 1
+            while not buf.rstrip().endswith(close) and i < n:
+                buf += ' ' + lines[i].strip().replace('\\$', '$'); i += 1
+            buf = buf.rstrip()
+            if buf.endswith(close):
+                buf = buf[:-2]
+            for part in re.split(r'\\\\', buf):
+                if part.strip():
+                    add_equation(doc, part, cfg)
+            cfg.after_table = False
+            continue
+        mm = re.fullmatch(r'\$([^$]+)\$', se)
+        if mm or is_bare_equation(s):
+            add_equation(doc, mm.group(1) if mm else s, cfg)
+            cfg.after_table = False
+            i += 1; continue
         m = re.match(r'^(#{1,6})\s+(.*)$', s)
         if m:
             cfg.after_table = False
             level = len(m.group(1)); text = m.group(2).strip()
+            if in_front and level >= 2:
+                end_front_matter(doc, cfg)
+                in_front = False
             add_heading(doc, text, level, cfg)
             in_refs = bool(re.search(r'(المراجع|مراجع|References|Bibliography|المصادر)', text))
             if level == 1 and not cfg.keep_byline:
@@ -478,7 +757,8 @@ def convert(md, out, cfg):
             add_paragraph(doc, s.lstrip('>').strip(), cfg)
             i += 1; continue
         buf = [s]; i += 1
-        while i < n and lines[i].strip() and not re.match(r'^(#{1,6}\s|\||[-*+]\s|\d+[.)]\s|```|>)', lines[i].strip()):
+        while (i < n and lines[i].strip() and not re.match(r'^(#{1,6}\s|\||[-*+]\s|\d+[.)]\s|```|>|\\?\$|\\\[)', lines[i].strip())
+               and not is_bare_equation(lines[i].strip())):
             buf.append(lines[i].strip()); i += 1
         text = ' '.join(buf)
         if in_refs and len(text) > 40:
@@ -487,6 +767,13 @@ def convert(md, out, cfg):
             add_paragraph(doc, text, cfg)
         if not SOURCE_RE.match(text):
             cfg.after_table = False
+    if in_front:  # a cover with no '##' after it
+        end_front_matter(doc, cfg)
+    body_sec = doc.sections[-1]
+    if cfg.front:
+        body_sec.footer.is_linked_to_previous = False
+        restart_page_numbers(body_sec._sectPr, 1)
+    add_page_number(body_sec, cfg)
     doc.core_properties.title = next((l[2:].strip() for l in lines if l.startswith('# ')), '')
     doc.save(out)
 
@@ -498,6 +785,7 @@ def main():
     ap.add_argument('--en-font', default='Traditional Arabic')
     ap.add_argument('--size', type=float, default=16)
     ap.add_argument('--table-size', type=float, default=14)
+    ap.add_argument('--math-size', type=float, default=14, help='equation font size (Cambria Math)')
     ap.add_argument('--color', default='0D0D0D')
     ap.add_argument('--line', type=float, default=1.08)
     ap.add_argument('--margins', type=float, default=2.54)
@@ -505,17 +793,30 @@ def main():
     ap.add_argument('--keep-byline', action='store_true')
     ap.add_argument('--dir', default='auto', choices=['auto', 'rtl', 'ltr'])
     ap.add_argument('--images', help='JSON list of {"alt", "path"} in document order')
+    ap.add_argument('--cover', default='auto', choices=['auto', 'on', 'off'],
+                    help='blocks before the first ## become a cover page (auto: when there is more than the title)')
+    ap.add_argument('--toc', default='auto', choices=['auto', 'on', 'off'],
+                    help='table of contents page after the cover (auto: when there is a cover)')
+    ap.add_argument('--toc-levels', default='2-3', help='heading levels in the contents: ## = 2, ### = 3')
+    ap.add_argument('--toc-title', default=None)
     cfg = ap.parse_args()
     cfg.images = load_images(cfg.images)
     cfg.img_ok, cfg.img_missing = 0, []
     cfg.after_table = False
+    cfg.eq_count = 0
+    cfg.front = False
     md = load_markdown(cfg.input)
     if cfg.dir == 'auto':
         cfg.doc_rtl = len(AR_RE.findall(md)) > len(LATIN_RE.findall(md))
     else:
         cfg.doc_rtl = cfg.dir == 'rtl'
+    if cfg.toc_title is None:
+        cfg.toc_title = 'فهرس المحتويات' if cfg.doc_rtl else 'Contents'
+    cfg.toc_hint = ('يُحدَّث الفهرس عند فتح الملف في Word؛ أو انقر عليه بالزر الأيمن ثم «تحديث الحقل».'
+                    if cfg.doc_rtl else 'Word fills the contents when the file opens; or right-click it and choose Update Field.')
     convert(md, cfg.output, cfg)
     print(f'OK -> {cfg.output}  (direction: {"RTL" if cfg.doc_rtl else "LTR"})')
+    print(f'cover+contents: {"yes" if cfg.front else "no"}; equations: {cfg.eq_count}')
     print(f'images: {cfg.img_ok} embedded, {len(cfg.img_missing)} missing'
           + (f' ({", ".join(cfg.img_missing)})' if cfg.img_missing else ''))
 
