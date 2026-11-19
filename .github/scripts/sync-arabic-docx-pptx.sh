@@ -30,7 +30,7 @@ sync_skill() { # url skill-name
   echo
   echo "Do not edit the skills here. They are copied by \`.github/workflows/sync-arabic-docx-pptx.yml\` from:"
   echo
-  sync_skill "$SRC_DOCX" doc-to-word-rtl
+  sync_skill "$SRC_DOCX" arabic-docx
   sync_skill "$SRC_PPTX" arabic-pptx
 } > "$TMP/SOURCES.md"
 cp "$TMP/SOURCES.md" "$PLUGIN/SOURCES.md"
