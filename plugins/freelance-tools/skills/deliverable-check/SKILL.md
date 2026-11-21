@@ -20,6 +20,7 @@ Dawood's standing defaults. Apply them without asking and list what changed in t
 - In-text citations stay only when the brief requires them. Otherwise clean with `--strip-citations`; the reference list stays.
 - The reference list follows the output language: an Arabic deliverable with an all-English reference list is a finding.
 - Every trap word from the brief is gone.
+- A report that comes with a non-document project (a website, an app, a design, code) is a plain document: default fonts, black text on white, normal headings and tables. It does not use the project's theme colors, gradients, fonts or branding. Only the project itself carries its design. A brief that asks for a styled or branded report replaces this rule.
 - The delivered file is named with words separated by spaces or hyphens, in Arabic or English, with no underscores and no `.clean` suffix: `تقرير التدريب الميداني.docx`, `Asthma-Presentation.pptx`. A naming rule in the brief replaces this one and is followed exactly.
 
 Ask Dawood only about: content the brief did not ask for, a reference list in the wrong language (it needs new sources), dense citations when citations are required, and long `ai_style` rewrites.
@@ -30,11 +31,11 @@ Ask Dawood only about: content the brief did not ask for, a reference list in th
 
 2. **Scan.** Run `python3 SCRIPT scan FILE... --find WORD` with one `--find` per trap word. Scan never edits. Done when every file has a report.
 
-3. **Check against the brief.** Compare the file with each brief field: output language, length (slides, words, pages), required sections present, citation and reference rules, format (style guide, RTL, template). List anything present that the brief did not ask for as off-brief content. Done when each field is marked `match`, `mismatch` or `skipped`.
+3. **Check against the brief.** Compare the file with each brief field: output language, length (slides, words, pages), required sections present, citation and reference rules, format (style guide, RTL, template). When the file is a report that comes with a website, app, design or code project, also check that it is plain (no project theme colors, shaded headers or branded fonts). List anything present that the brief did not ask for as off-brief content. Done when each field is marked `match`, `mismatch` or `skipped`.
 
 4. **Clean.** Run `python3 SCRIPT clean FILE --find WORD...`, adding `--strip-citations` (docx) when the brief does not require in-text citations and `--thin-citations` when it does. The original stays untouched. Done when `<name>.clean.<ext>` exists and its re-scan shows zero `auto` findings.
 
-5. **Fix the rest on the clean copy.** Edit with the matching format skill (docx, pptx, xlsx, pdf). Policy items first, without asking: delete notes, tool marks, residue and trap words; blank fill-in fields the script could not reach (a field split across runs); remove citations in pptx, xlsx and pdf when the policy says so. Then put the ask items to Dawood in one message. For `ai_style` findings, read `references/humanizer-rules.md` and rewrite by its procedure. Done when each item is fixed or Dawood chose to keep it.
+5. **Fix the rest on the clean copy.** Edit with the matching format skill (docx, pptx, xlsx, pdf). Policy items first, without asking: delete notes, tool marks, residue and trap words; blank fill-in fields the script could not reach (a field split across runs); remove citations in pptx, xlsx and pdf when the policy says so; reset a report that carries project theme colors to plain formatting. Then put the ask items to Dawood in one message. For `ai_style` findings, read `references/humanizer-rules.md` and rewrite by its procedure. Done when each item is fixed or Dawood chose to keep it.
 
 6. **Verify.** Re-run `scan` on the final file with the same `--find` words. Done when only items Dawood chose to keep remain. Save the final file under its delivery name (`-o NAME` on clean, or a renamed copy). Reply in one short message: the clean file, what the policy removed, the brief mismatches left, and the kept items.
 
@@ -57,7 +58,7 @@ Ask Dawood only about: content the brief did not ask for, a reference list in th
 | ai_style | manual | machine-sounding patterns: not-X-but-Y contrasts, dashes as connectors, stock words, inflated or sales wording, stock closers, emoji, bold-label lists |
 | citations | optional or manual | dense paragraphs; the same citation repeated in one paragraph |
 | hidden | manual | hidden text, slides and sheets |
-| format | manual | missing right-to-left direction, empty slides, error cells, blank pages |
+| format | manual | missing right-to-left direction, empty slides, error cells, blank pages; project theme colors in a report that should be plain |
 
 The report also prints the reference list line (entries, Arabic, other) for docx and pptx.
 
