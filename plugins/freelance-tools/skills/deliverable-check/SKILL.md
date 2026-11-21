@@ -1,7 +1,7 @@
 ---
 name: deliverable-check
 description: Pre-delivery check for docx, pptx, xlsx and pdf files. Removes what must not reach the client (comments, tracked changes, speaker notes, slide footers, metadata, fill-in fields, notes to the writer or student, chatbot residue, tool marks, unrequested in-text citations, brief traps), checks the file against the brief, then writes a clean copy. Triggers on "ready to deliver", "check before sending", "قبل التسليم", "نظّف الملف", "راجع الملف للتسليم".
-version: '0.3.0'
+version: '0.3.1'
 ---
 
 # Deliverable check
