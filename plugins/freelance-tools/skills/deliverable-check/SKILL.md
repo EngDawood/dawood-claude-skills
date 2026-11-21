@@ -10,9 +10,15 @@ A delivered file carries only what the brief asked for, in the brief's language,
 
 Script: `${CLAUDE_PLUGIN_ROOT}/skills/deliverable-check/scripts/deliverable_check.py` (needs `lxml` and `pypdf`; install with `pip install --break-system-packages lxml pypdf` when the import fails). Written below as `SCRIPT`.
 
+## Global rule: requirements first
+
+Before applying any rule in this skill, read the task requirements (the brief). When a rule conflicts with the requirements, the requirements win: skip that rule for this task and name it in the final message as excluded, with the requirement that overrides it. Examples: the brief asks for comments in the code, a branded or colored report, Calibri, a code box in the document, or a naming pattern. Apply every rule the requirements do not contradict.
+
 ## Delivery policy
 
-Dawood's standing defaults. Apply them without asking and list what changed in the final message.
+Dawood's standing defaults. Apply them without asking (subject to the global rule) and list what changed in the final message.
+
+### Content
 
 - Comments, tracked changes (accepted), speaker notes, slide footer and date text, metadata: removed by `clean`. Author fields stay blank unless Dawood names an author.
 - Fill-in fields are blanked and their label kept: `Student: [Full name] — ID [Student ID]` becomes `Student:`. The student writes his own details.
@@ -20,7 +26,20 @@ Dawood's standing defaults. Apply them without asking and list what changed in t
 - In-text citations stay only when the brief requires them. Otherwise clean with `--strip-citations`; the reference list stays.
 - The reference list follows the output language: an Arabic deliverable with an all-English reference list is a finding.
 - Every trap word from the brief is gone.
-- A report that comes with a non-document project (a website, an app, a design, code) is a plain document: default fonts, black text on white, normal headings and tables. It does not use the project's theme colors, gradients, fonts or branding. Only the project itself carries its design. A brief that asks for a styled or branded report replaces this rule.
+
+### Report formatting
+
+- A report that comes with a non-document project (a website, an app, a design, code) is a plain document: normal headings and tables, black text on white. It does not use the project's theme colors, gradients, fonts or branding. Only the project itself carries its design.
+- An English docx uses Arial or Times New Roman for body text, headings and tables. Replace Calibri (the Word default) with one of them; use one family per document. Arabic text keeps the font the Arabic rules or the brief set.
+- Code, commands, terminal output and similar technical text inside a docx go in ordinary paragraphs. Add no background shading, no borders and no single-cell table around them.
+
+### Code files
+
+- Deliver code with as few comments as it can carry: none by default. Add comments only when the requirements ask for them, and then only the kind and amount asked for.
+- Do not add comments that restate the line below them, section banners, header blocks, or a docstring on every function. Delete such comments when cleaning code you wrote.
+
+### File names
+
 - The delivered file is named with words separated by spaces or hyphens, in Arabic or English, with no underscores and no `.clean` suffix: `تقرير التدريب الميداني.docx`, `Asthma-Presentation.pptx`. A naming rule in the brief replaces this one and is followed exactly.
 
 Ask Dawood only about: content the brief did not ask for, a reference list in the wrong language (it needs new sources), dense citations when citations are required, and long `ai_style` rewrites.
@@ -31,13 +50,13 @@ Ask Dawood only about: content the brief did not ask for, a reference list in th
 
 2. **Scan.** Run `python3 SCRIPT scan FILE... --find WORD` with one `--find` per trap word. Scan never edits. Done when every file has a report.
 
-3. **Check against the brief.** Compare the file with each brief field: output language, length (slides, words, pages), required sections present, citation and reference rules, format (style guide, RTL, template). When the file is a report that comes with a website, app, design or code project, also check that it is plain (no project theme colors, shaded headers or branded fonts). List anything present that the brief did not ask for as off-brief content. Done when each field is marked `match`, `mismatch` or `skipped`.
+3. **Check against the brief.** First list the policy rules the requirements override (global rule) and drop them from the checks below. Then compare the file with each brief field: output language, length (slides, words, pages), required sections present, citation and reference rules, format (style guide, RTL, template). For the remaining formatting rules, check the report is plain when it comes with a project, an English docx uses Arial or Times New Roman, code and command text has no background box, and code files carry no unrequested comments. List anything present that the brief did not ask for as off-brief content. Done when each field is marked `match`, `mismatch` or `skipped`.
 
 4. **Clean.** Run `python3 SCRIPT clean FILE --find WORD...`, adding `--strip-citations` (docx) when the brief does not require in-text citations and `--thin-citations` when it does. The original stays untouched. Done when `<name>.clean.<ext>` exists and its re-scan shows zero `auto` findings.
 
-5. **Fix the rest on the clean copy.** Edit with the matching format skill (docx, pptx, xlsx, pdf). Policy items first, without asking: delete notes, tool marks, residue and trap words; blank fill-in fields the script could not reach (a field split across runs); remove citations in pptx, xlsx and pdf when the policy says so; reset a report that carries project theme colors to plain formatting. Then put the ask items to Dawood in one message. For `ai_style` findings, read `references/humanizer-rules.md` and rewrite by its procedure. Done when each item is fixed or Dawood chose to keep it.
+5. **Fix the rest on the clean copy.** Edit with the matching format skill (docx, pptx, xlsx, pdf). Policy items first, without asking: delete notes, tool marks, residue and trap words; blank fill-in fields the script could not reach (a field split across runs); remove citations in pptx, xlsx and pdf when the policy says so; reset a report that carries project theme colors to plain formatting; change Calibri to Arial or Times New Roman in an English docx; remove shading, borders and boxes around code and command text; strip unrequested comments from code files. Then put the ask items to Dawood in one message. For `ai_style` findings, read `references/humanizer-rules.md` and rewrite by its procedure. Done when each item is fixed or Dawood chose to keep it.
 
-6. **Verify.** Re-run `scan` on the final file with the same `--find` words. Done when only items Dawood chose to keep remain. Save the final file under its delivery name (`-o NAME` on clean, or a renamed copy). Reply in one short message: the clean file, what the policy removed, the brief mismatches left, and the kept items.
+6. **Verify.** Re-run `scan` on the final file with the same `--find` words. Done when only items Dawood chose to keep remain. Save the final file under its delivery name (`-o NAME` on clean, or a renamed copy). Reply in one short message: the clean file, what the policy removed, the rules excluded by the requirements, the brief mismatches left, and the kept items.
 
 7. **Lessons.** After the reply in step 6, check whether this run taught something the skill does not already say: a pattern the scan missed or flagged wrongly, an error you hit, a correction from Dawood, or a better approach. If it did, send one message titled `ملاحظات للمهارة` with at most 3 proposed edits, each as: the file (`SKILL.md`, `references/*.md`, or a rule in `scripts/deliverable_check.py`), the current line, the new text, and a one-line reason. Change nothing until Dawood answers. Apply only the approved edits to the `EngDawood/dawood-claude-skills` repo on main (files under `plugins/freelance-tools/skills/deliverable-check/`) with the github-mcp tools (`gh_file_get`, then `gh_file_put` for one file or `gh_push_files` for several, in one commit). A script change also gets a case in `tests/run_tests.py`; run the tests first when a shell is available. When the github-mcp tools are not in the session, write each approved edit in the reply instead (file path, the exact old text, the exact new text) so Dawood can apply it. Done when the edits are pushed or written out, Dawood declined, or the run taught nothing new (then say nothing).
 
@@ -58,7 +77,7 @@ Ask Dawood only about: content the brief did not ask for, a reference list in th
 | ai_style | manual | machine-sounding patterns: not-X-but-Y contrasts, dashes as connectors, stock words, inflated or sales wording, stock closers, emoji, bold-label lists |
 | citations | optional or manual | dense paragraphs; the same citation repeated in one paragraph |
 | hidden | manual | hidden text, slides and sheets |
-| format | manual | missing right-to-left direction, empty slides, error cells, blank pages; project theme colors in a report that should be plain |
+| format | manual | missing right-to-left direction, empty slides, error cells, blank pages; project theme colors in a report; Calibri in an English docx; shading or boxes around code text; unrequested code comments |
 
 The report also prints the reference list line (entries, Arabic, other) for docx and pptx.
 
