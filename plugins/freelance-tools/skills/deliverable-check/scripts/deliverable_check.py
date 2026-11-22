@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 """deliverable-check: scan and clean docx, pptx, xlsx and pdf files before delivery.
 
-    deliverable_check.py scan  FILE... [--json] [--max-per-paragraph N] [--find WORD]...
+    deliverable_check.py scan  FILE... [--json] [--max-per-paragraph N] [--find WORD]... [--skip CATEGORY]...
     deliverable_check.py clean FILE... [-o OUT] [--author NAME] [--thin-citations]
-                               [--strip-citations] [--keep-fields] [--find WORD]...
+                               [--strip-citations] [--keep-fields] [--find WORD]... [--skip CATEGORY]...
+
+--skip drops a whole category from the report and, in `clean`, leaves that category untouched
+(use it when the task requirements contradict the check). Categories: see CATEGORIES.
 
 `scan` never modifies a file. `clean` always writes a new file (default
 <name>.clean.<ext> next to the original) and re-scans it.
@@ -152,6 +155,9 @@ REF_HEAD = re.compile(
     r"^\s*(?:references?|bibliography|works cited|reference list|sources|المراجع|قائمة المراجع"
     r"|المصادر والمراجع|المصادر|مراجع البحث)\s*[:：]?\s*$", re.I)
 TRAPS: list = []
+SKIP: set = set()
+CATEGORIES = ("trap", "filename", "comments", "tracked_changes", "speaker_notes", "slide_footer", "metadata",
+              "hidden", "placeholder", "note", "residue", "ai_style", "citations", "format")
 
 CITE_PAREN = re.compile(
     r"\((?=[^()\n]*[^\W\d_])[^()\n]{1,120}?[,،]\s*(?:\d{4}[a-z]?|n\.d\.|د\.ت)[^()\n]{0,80}\)")
@@ -186,7 +192,7 @@ def needs_rtl(text: str) -> bool:
 
 
 def add(F, category, rule, fix, count, examples=(), note=""):
-    if count:
+    if count and category not in SKIP:
         F.append({"category": category, "rule": rule, "fix": fix, "count": count,
                   "examples": list(examples)[:5], "note": note})
 
@@ -746,15 +752,18 @@ def unwrap(el):
 
 
 def clean_docx_xml(root, stats):
-    for tag in ("commentRangeStart", "commentRangeEnd"):
-        for el in list(root.iter(q("w", tag))):
-            remove_el(el)
-    for ref in list(root.iter(q("w", "commentReference"))):
-        run = ref.getparent()
-        if run.tag == q("w", "r"):
-            remove_el(run)
-        else:
-            remove_el(ref)
+    if "comments" not in SKIP:
+        for tag in ("commentRangeStart", "commentRangeEnd"):
+            for el in list(root.iter(q("w", tag))):
+                remove_el(el)
+        for ref in list(root.iter(q("w", "commentReference"))):
+            run = ref.getparent()
+            if run.tag == q("w", "r"):
+                remove_el(run)
+            else:
+                remove_el(ref)
+    if "tracked_changes" in SKIP:
+        return
     for tag in ("moveFromRangeStart", "moveFromRangeEnd", "moveToRangeStart", "moveToRangeEnd"):
         for el in list(root.iter(q("w", tag))):
             remove_el(el)
@@ -874,7 +883,7 @@ def clean_package(pkg: Package, author: str, thin: bool, fields: bool = True, st
     kind = kind_of(pkg)
     stats = {"revisions": 0, "thinned": 0, "fields": 0, "citations_removed": 0, "parts_removed": 0}
     if kind == "docx":
-        for n in pkg.match(r"word/(comments\w*|people)\.xml$"):
+        for n in pkg.match(r"word/(comments\w*|people)\.xml$") if "comments" not in SKIP else []:
             drop_part(pkg, n)
         for n in pkg.match(r"word/(document|header\d*|footer\d*|footnotes|endnotes)\.xml$"):
             clean_docx_xml(pkg.tree(n), stats)
@@ -885,20 +894,25 @@ def clean_package(pkg: Package, author: str, thin: bool, fields: bool = True, st
             if fields:
                 blank_fields(pkg.tree(n), q("w", "p"), q("w", "t"), stats)
             pkg.touch(n)
-        if "word/settings.xml" in pkg.parts:
+        if "word/settings.xml" in pkg.parts and "tracked_changes" not in SKIP:
             root = pkg.tree("word/settings.xml")
             for el in list(root.iter(q("w", "trackRevisions"))):
                 remove_el(el)
             pkg.touch("word/settings.xml")
     elif kind == "pptx":
-        for pat in (r"ppt/notesSlides/.*", r"ppt/comments/.*", r"ppt/commentAuthors\.xml$", r"ppt/authors\.xml$"):
+        pats = []
+        if "speaker_notes" not in SKIP:
+            pats.append(r"ppt/notesSlides/.*")
+        if "comments" not in SKIP:
+            pats += [r"ppt/comments/.*", r"ppt/commentAuthors\.xml$", r"ppt/authors\.xml$"]
+        for pat in pats:
             for n in pkg.match(pat):
                 drop_part(pkg, n)
         for n in pkg.match(r"ppt/slides/slide\d+\.xml$"):
             root = pkg.tree(n)
             for sp in list(root.iter(q("p", "sp"))):
                 ph = sp.find(f"{q('p', 'nvSpPr')}/{q('p', 'nvPr')}/{q('p', 'ph')}")
-                if ph is not None and ph.get("type") in FOOTER_PH:
+                if ph is not None and ph.get("type") in FOOTER_PH and "slide_footer" not in SKIP:
                     remove_el(sp)
                     stats["footers"] = stats.get("footers", 0) + 1
             if fields:
@@ -906,9 +920,9 @@ def clean_package(pkg: Package, author: str, thin: bool, fields: bool = True, st
             pkg.touch(n)
     else:
         for pat in (r"xl/comments(?:/[^/]+|\d*)\.xml$", r"xl/threadedComments/.*", r"xl/persons/.*"):
-            for n in pkg.match(pat):
+            for n in pkg.match(pat) if "comments" not in SKIP else []:
                 drop_part(pkg, n)
-        for rn in pkg.match(r"xl/worksheets/_rels/sheet\d+\.xml\.rels$"):
+        for rn in pkg.match(r"xl/worksheets/_rels/sheet\d+\.xml\.rels$") if "comments" not in SKIP else []:
             root = pkg.tree(rn)
             rels = list(root.iter(q("rel", "Relationship")))
             if any((r.get("Type") or "").endswith("/comments") for r in rels):
@@ -920,7 +934,8 @@ def clean_package(pkg: Package, author: str, thin: bool, fields: bool = True, st
                 for el in list(sheet.iter(q("x", "legacyDrawing"))):
                     remove_el(el)
                 pkg.touch(src)
-    scrub_core(pkg, author)
+    if "metadata" not in SKIP:
+        scrub_core(pkg, author)
     stats["parts_removed"] = len(pkg.removed)
     strip_rels_and_types(pkg)
     return stats
@@ -940,7 +955,7 @@ def clean_pdf(path: Path, out: Path, author: str) -> dict:
     removed = 0
     for page in writer.pages:
         annots = page.get("/Annots")
-        if not annots:
+        if not annots or "comments" in SKIP:
             continue
         keep = [a for a in annots if str(a.get_object().get("/Subtype")) in PDF_KEEP]
         removed += len(annots) - len(keep)
@@ -949,9 +964,10 @@ def clean_pdf(path: Path, out: Path, author: str) -> dict:
         else:
             del page["/Annots"]
     root = writer._root_object
-    if "/Metadata" in root:
-        del root["/Metadata"]
-    writer.add_metadata({"/Author": author, "/Creator": "", "/Producer": "", "/Subject": "", "/Keywords": ""})
+    if "metadata" not in SKIP:
+        if "/Metadata" in root:
+            del root["/Metadata"]
+        writer.add_metadata({"/Author": author, "/Creator": "", "/Producer": "", "/Subject": "", "/Keywords": ""})
     with open(out, "wb") as fh:
         writer.write(fh)
     return {"annotations_removed": removed}
@@ -987,6 +1003,8 @@ def main(argv=None) -> int:
     sc.add_argument("--max-per-paragraph", type=int, default=3)
     sc.add_argument("--find", action="append", default=[], metavar="WORD",
                     help="report this word or phrase (a trap from the brief); repeatable")
+    sc.add_argument("--skip", action="append", default=[], choices=CATEGORIES, metavar="CATEGORY",
+                    help="leave this category out (the task requirements contradict it); repeatable")
     cl = sub.add_parser("clean", help="write a cleaned copy and re-scan it")
     cl.add_argument("files", nargs="+", type=Path)
     cl.add_argument("-o", "--output", type=Path)
@@ -997,8 +1015,13 @@ def main(argv=None) -> int:
     cl.add_argument("--keep-fields", action="store_true",
                     help="keep fill-in fields such as [Full name] (default: blank them, keep the label)")
     cl.add_argument("--find", action="append", default=[], metavar="WORD")
+    cl.add_argument("--skip", action="append", default=[], choices=CATEGORIES, metavar="CATEGORY",
+                    help="leave this category out of the report and do not clean it; repeatable")
     cl.add_argument("--max-per-paragraph", type=int, default=3)
     a = ap.parse_args(argv)
+    SKIP.update(a.skip)
+    if SKIP:
+        print(f"skipped categories: {', '.join(sorted(SKIP))}", file=sys.stderr)
 
     if a.cmd == "scan":
         reps = [scan_file(f, a.max_per_paragraph, a.find) for f in a.files]
@@ -1014,7 +1037,7 @@ def main(argv=None) -> int:
     code = 0
     for f in a.files:
         code |= clean_file(f, a.output, a.author, a.thin_citations, a.max_per_paragraph,
-                           not a.keep_fields, a.strip_citations, a.find)
+                           not a.keep_fields and "placeholder" not in SKIP, a.strip_citations, a.find)
     return code
 
 
