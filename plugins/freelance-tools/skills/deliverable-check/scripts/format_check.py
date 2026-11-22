@@ -1,11 +1,17 @@
 #!/usr/bin/env python3
 """format-check: scan the delivery formatting rules that deliverable_check.py does not cover.
 
-    format_check.py FILE... [--json] [--find WORD]...
+    format_check.py FILE... [--json] [--find WORD]... [--skip CHECK]...
+
+Checks (for --skip): calibri, code-box, header-title, slide-repeat, slide-sources, code-comments. Skip a check when the task requirements
+contradict it (for example the brief asks for comments in the code).
 
 docx   Calibri in an English document (use Arial or Times New Roman).
        Code, command or output text inside a box: paragraph shading, borders, a shaded
        cell, highlighted text, or a single-cell table.
+       Header or footer text other than page numbers (a title or name on every page).
+pptx   The same text repeated on most slides (a deck title or name used as a footer).
+       Source lines and image credits on slides.
 code   Comments in source files (policy: none unless the brief asks for them).
        Supported: py sh rb pl r yml yaml toml js jsx ts tsx java c cpp cc h hpp cs go rs php
        swift kt dart scss less css sql html htm xml.
@@ -186,7 +192,16 @@ def box_reasons(p, runs, S: Styles) -> list:
     return list(dict.fromkeys(out))
 
 
-def scan_docx(pkg: dc.Package, F: list) -> dict:
+CHECKS = ("calibri", "code-box", "header-title", "slide-repeat", "slide-sources", "code-comments")
+PAGE_WORDS = re.compile(r"\b(?:page|pages|of|صفحة|من)\b|[\d\s\-\u2013\u2014/|:.,]", re.I)
+SOURCE_LINE = re.compile(
+    r"^\s*(?:sources?|image sources?|photo sources?|image credits?|photo credits?|credits?|references?|"
+    r"photo by|image by|images? (?:from|courtesy)|photos? (?:from|courtesy)|"
+    r"المصدر|المصادر|مصدر الصورة|مصادر الصور|المراجع)\s*[:\uFF1A\-]", re.I)
+SOURCE_TITLE = re.compile(r"^\s*(?:sources?|references?|bibliography|image credits?|المصادر|المراجع|قائمة المراجع)\s*$", re.I)
+
+
+def scan_docx(pkg: dc.Package, F: list, skip=()) -> dict:
     S = Styles(pkg)
     doc = pkg.tree("word/document.xml")
     latin: Counter = Counter()
@@ -214,7 +229,7 @@ def scan_docx(pkg: dc.Package, F: list) -> dict:
         mono = sum(len(t) for f, t, _ in runs if MONO.search(f))
         codeish = (mono >= 0.6 * len(text) or S.is_code_style(para_style(p, S))
                    or bool(CMD_HINT.match(text.strip())))
-        if codeish:
+        if codeish and "code-box" not in skip:
             why = box_reasons(p, runs, S)
             if why:
                 boxed.append(f"p{i}: {text.strip()[:40]} ({', '.join(why)})")
@@ -225,14 +240,59 @@ def scan_docx(pkg: dc.Package, F: list) -> dict:
     joined = "".join(all_text)
     english = len(dc.LETTER.findall(joined)) >= 10 and not dc.needs_rtl(joined)
     total = sum(latin.values()) or 1
-    if english and calibri_paras:
+    if english and calibri_paras and "calibri" not in skip:
         share = ", ".join(f"{f} {round(100 * n / total)}%" for f, n in latin.most_common(3))
         add = dc.add
         add(F, "format", "Calibri in an English docx", "manual", len(calibri_paras), calibri_paras,
             f"Latin text by font: {share}. Use Arial or Times New Roman (one family) unless the brief names another font.")
     dc.add(F, "format", "code, command or output text inside a background box", "manual", len(boxed), boxed,
            "Use ordinary paragraphs: no shading, borders or single-cell table, unless the brief asks for a code box.")
+    if "header-title" not in skip:
+        heads = []
+        for n in pkg.match(r"word/(header|footer)\d*\.xml$"):
+            for p in pkg.tree(n).iter(q("w", "p")):
+                text = dc.para_text(p, q("w", "p"), q("w", "t")).strip()
+                if text and PAGE_WORDS.sub("", text):
+                    heads.append(f"{n.split('/')[-1]}: {text[:50]}")
+        dc.add(F, "format", "header or footer text besides page numbers", "manual", len(heads), heads,
+               "Keep only the page number in headers and footers, not the report title or the author name.")
     return {"paragraphs": len(all_text), "latin_fonts": dict(latin)}
+
+
+# ---------------------------------------------------------------- pptx
+
+
+def scan_pptx(pkg: dc.Package, F: list, skip=()) -> dict:
+    def slide_no(n):
+        return int(re.search(r"(\d+)\.xml$", n).group(1))
+
+    slides = sorted(pkg.match(r"ppt/slides/slide\d+\.xml$"), key=slide_no)
+    seen: dict = {}
+    sources = []
+    for n in slides:
+        no = slide_no(n)
+        texts = set()
+        for sp in pkg.tree(n).iter(q("p", "sp")):
+            ph = sp.find(f"{q('p', 'nvSpPr')}/{q('p', 'nvPr')}/{q('p', 'ph')}")
+            paras = [dc.para_text(p, q("a", "p"), q("a", "t")).strip() for p in sp.iter(q("a", "p"))]
+            paras = [x for x in paras if x]
+            whole = " ".join(paras)
+            if whole and not whole.isdigit() and (ph is None or ph.get("type") not in ("title", "ctrTitle", "sldNum")):
+                texts.add(re.sub(r"\s+", " ", whole).lower())
+            for i, x in enumerate(paras):
+                if SOURCE_LINE.match(x) or (ph is not None and ph.get("type") in ("title", "ctrTitle") and SOURCE_TITLE.match(x)):
+                    sources.append(f"slide {no}: {x[:60]}")
+        for tx in texts:
+            seen.setdefault(tx, []).append(no)
+    need = max(3, round(0.6 * len(slides)))
+    repeated = [f"{tx[:50]} (on {len(v)} of {len(slides)} slides)" for tx, v in seen.items() if len(v) >= need]
+    if "slide-repeat" not in skip:
+        dc.add(F, "format", "same text repeated on most slides", "manual", len(repeated), repeated,
+               "A deck title or name used as a footer. Keep only slide numbers.")
+    if "slide-sources" not in skip:
+        dc.add(F, "format", "source line or image credit on a slide", "manual", len(sources), sources,
+               "Do not put sources or image credits on slides, unless the brief asks for them.")
+    return {"slides": len(slides)}
 
 
 # ---------------------------------------------------------------- code files
@@ -341,7 +401,7 @@ def find_comments(text: str, fam: dict) -> list:
     return out
 
 
-def scan_code(path: Path, F: list) -> dict:
+def scan_code(path: Path, F: list, skip=()) -> dict:
     text = path.read_text(encoding="utf-8", errors="replace")
     found = [c for c in find_comments(text, FAMILIES[path.suffix.lower()]) if not DIRECTIVE.match(c[2])]
     lines = sum(1 for ln in text.splitlines() if ln.strip())
@@ -353,8 +413,9 @@ def scan_code(path: Path, F: list) -> dict:
     note = (f"{comment_lines} comment lines out of {lines} non-blank lines ({pct}%); {breakdown}"
             f"{'; ' + str(banners) + ' banner(s)' if banners else ''}. "
             "Policy: none unless the brief asks for comments.")
-    dc.add(F, "format", "comments in code", "manual", len(found),
-           [f"line {c[0]}: {c[2]}" for c in found], note)
+    if "code-comments" not in skip:
+        dc.add(F, "format", "comments in code", "manual", len(found),
+               [f"line {c[0]}: {c[2]}" for c in found], note)
     traps = []
     for word in dc.TRAPS:
         rx = re.compile(re.escape(word), re.I)
@@ -370,14 +431,16 @@ def scan_code(path: Path, F: list) -> dict:
 # ---------------------------------------------------------------- driver
 
 
-def scan_file(path: Path, traps=()) -> dict | None:
+def scan_file(path: Path, traps=(), skip=()) -> dict | None:
     dc.TRAPS[:] = [t for t in traps if t.strip()]
     F: list = []
     ext = path.suffix.lower()
     if ext == ".docx":
-        kind, stats = "docx", scan_docx(dc.Package(path), F)
+        kind, stats = "docx", scan_docx(dc.Package(path), F, skip)
+    elif ext == ".pptx":
+        kind, stats = "pptx", scan_pptx(dc.Package(path), F, skip)
     elif ext in FAMILIES:
-        kind, stats = "code", scan_code(path, F)
+        kind, stats = "code", scan_code(path, F, skip)
     else:
         return None
     return {"file": str(path), "kind": kind, "stats": stats, "findings": F}
@@ -401,10 +464,14 @@ def main(argv=None) -> int:
     ap.add_argument("--json", action="store_true")
     ap.add_argument("--find", action="append", default=[], metavar="WORD",
                     help="report this word or phrase in code files (a trap from the brief); repeatable")
+    ap.add_argument("--skip", action="append", default=[], choices=CHECKS, metavar="CHECK",
+                    help="leave this check out (the task requirements contradict it); repeatable")
     a = ap.parse_args(argv)
+    if a.skip:
+        print(f"skipped checks: {', '.join(sorted(set(a.skip)))}", file=sys.stderr)
     reps = []
     for f in a.files:
-        rep = scan_file(f, a.find)
+        rep = scan_file(f, a.find, a.skip)
         if rep is None:
             print(f"{f.name}: no formatting checks for this file type")
         else:
