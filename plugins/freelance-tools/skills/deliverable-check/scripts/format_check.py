@@ -3,15 +3,17 @@
 
     format_check.py FILE... [--json] [--find WORD]... [--skip CHECK]...
 
-Checks (for --skip): calibri, code-box, header-title, slide-repeat, slide-sources, code-comments. Skip a check when the task requirements
-contradict it (for example the brief asks for comments in the code).
+Checks (for --skip): calibri, code-box, header-title, slide-repeat, slide-sources, self-notes,
+code-comments. Skip a check when the task requirements contradict it (for example the brief
+asks for comments in the code).
 
 docx   Calibri in an English document (use Arial or Times New Roman).
        Code, command or output text inside a box: paragraph shading, borders, a shaded
        cell, highlighted text, or a single-cell table.
        Header or footer text other than page numbers (a title or name on every page).
+       Self-notes: notes, assumptions or reminders the writer left for his own understanding.
 pptx   The same text repeated on most slides (a deck title or name used as a footer).
-       Source lines and image credits on slides.
+       Source lines and image credits on slides. Self-notes, as in docx.
 code   Comments in source files (policy: none unless the brief asks for them).
        Supported: py sh rb pl r yml yaml toml js jsx ts tsx java c cpp cc h hpp cs go rs php
        swift kt dart scss less css sql html htm xml.
@@ -192,7 +194,27 @@ def box_reasons(p, runs, S: Styles) -> list:
     return list(dict.fromkeys(out))
 
 
-CHECKS = ("calibri", "code-box", "header-title", "slide-repeat", "slide-sources", "code-comments")
+CHECKS = ("calibri", "code-box", "header-title", "slide-repeat", "slide-sources", "self-notes", "code-comments")
+SELF_NOTE = re.compile(
+    r"(?i)\b(?:note to self|self[- ]note|my note|internal note|working note|for my (?:own )?(?:reference|understanding)|"
+    r"scratch note)\b|^\s*\(?\s*(?:reminder|assumption|assumptions|my assumption|to (?:verify|check|confirm)|"
+    r"verify (?:this|later)|check (?:this|later)|double-check)\b\s*[:\-)]|"
+    r"\bI (?:assumed|assume|chose|decided|guess|am not sure|'m not sure|need to|should|will (?:check|verify|add|update))\b|"
+    r"\b(?:needs?|need) to be (?:verified|checked|confirmed|reviewed)\b|"
+    r"ملاحظة (?:لنفسي|داخلية|للفهم)|للتذكير\s*[:\-]|^\s*\(?\s*(?:تذكير|افتراض|الافتراض)\s*[:\-]|"
+    r"\b(?:أفترض|افترضت|اخترت|قررت|لست متأكد[اة]?|سأقوم)\b|يحتاج إلى (?:تحقق|مراجعة|تأكيد)")
+
+
+def self_notes(paras) -> list:
+    """paras: list of (where, text). Returns examples for self-notes."""
+    out = []
+    for where, text in paras:
+        m = SELF_NOTE.search(text)
+        if m:
+            out.append(f"{where}: {dc.snippet(text, m)}")
+    return out
+
+
 PAGE_WORDS = re.compile(r"\b(?:page|pages|of|صفحة|من)\b|[\d\s\-\u2013\u2014/|:.,]", re.I)
 SOURCE_LINE = re.compile(
     r"^\s*(?:sources?|image sources?|photo sources?|image credits?|photo credits?|credits?|references?|"
@@ -247,6 +269,14 @@ def scan_docx(pkg: dc.Package, F: list, skip=()) -> dict:
             f"Latin text by font: {share}. Use Arial or Times New Roman (one family) unless the brief names another font.")
     dc.add(F, "format", "code, command or output text inside a background box", "manual", len(boxed), boxed,
            "Use ordinary paragraphs: no shading, borders or single-cell table, unless the brief asks for a code box.")
+    if "self-notes" not in skip:
+        paras = [(f"p{i}", tx) for i, tx in enumerate(all_text, 1) if tx.strip()]
+        for n in pkg.match(r"word/(header|footer)\d*\.xml$"):
+            for i, p in enumerate(pkg.tree(n).iter(q("w", "p")), 1):
+                paras.append((f"{n.split('/')[-1]} p{i}", dc.para_text(p, q("w", "p"), q("w", "t"))))
+        notes = self_notes(paras)
+        dc.add(F, "format", "note or assumption written for the writer's own understanding", "manual", len(notes), notes,
+               "Delete it. Keep working notes in the chat, not in the file, unless the brief asks for them.")
     if "header-title" not in skip:
         heads = []
         for n in pkg.match(r"word/(header|footer)\d*\.xml$"):
@@ -268,7 +298,7 @@ def scan_pptx(pkg: dc.Package, F: list, skip=()) -> dict:
 
     slides = sorted(pkg.match(r"ppt/slides/slide\d+\.xml$"), key=slide_no)
     seen: dict = {}
-    sources = []
+    sources, slide_paras = [], []
     for n in slides:
         no = slide_no(n)
         texts = set()
@@ -276,6 +306,7 @@ def scan_pptx(pkg: dc.Package, F: list, skip=()) -> dict:
             ph = sp.find(f"{q('p', 'nvSpPr')}/{q('p', 'nvPr')}/{q('p', 'ph')}")
             paras = [dc.para_text(p, q("a", "p"), q("a", "t")).strip() for p in sp.iter(q("a", "p"))]
             paras = [x for x in paras if x]
+            slide_paras += [(f"slide {no}", x) for x in paras]
             whole = " ".join(paras)
             if whole and not whole.isdigit() and (ph is None or ph.get("type") not in ("title", "ctrTitle", "sldNum")):
                 texts.add(re.sub(r"\s+", " ", whole).lower())
@@ -292,6 +323,10 @@ def scan_pptx(pkg: dc.Package, F: list, skip=()) -> dict:
     if "slide-sources" not in skip:
         dc.add(F, "format", "source line or image credit on a slide", "manual", len(sources), sources,
                "Do not put sources or image credits on slides, unless the brief asks for them.")
+    if "self-notes" not in skip:
+        notes = self_notes(slide_paras)
+        dc.add(F, "format", "note or assumption written for the writer's own understanding", "manual", len(notes), notes,
+               "Delete it. Keep working notes in the chat, not in the file, unless the brief asks for them.")
     return {"slides": len(slides)}
 
 

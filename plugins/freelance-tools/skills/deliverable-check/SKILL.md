@@ -10,7 +10,7 @@ A delivered file carries only what the brief asked for, in the brief's language,
 
 Script: `${CLAUDE_PLUGIN_ROOT}/skills/deliverable-check/scripts/deliverable_check.py` (needs `lxml` and `pypdf`; install with `pip install --break-system-packages lxml pypdf` when the import fails). Written below as `SCRIPT`.
 
-Formatting script: `${CLAUDE_PLUGIN_ROOT}/skills/deliverable-check/scripts/format_check.py` (needs `lxml`; it imports `SCRIPT`, so keep both files together). It scans a docx for Calibri in English text, code or command text inside a box, and header or footer text besides page numbers; a pptx for a deck title repeated on the slides and for source lines or image credits; and code files for comments. It never edits. Written below as `FORMAT`.
+Formatting script: `${CLAUDE_PLUGIN_ROOT}/skills/deliverable-check/scripts/format_check.py` (needs `lxml`; it imports `SCRIPT`, so keep both files together). It scans a docx for Calibri in English text, code or command text inside a box, header or footer text besides page numbers, and self-notes; a pptx for a deck title repeated on the slides, source lines or image credits, and self-notes; and code files for comments. It never edits. Written below as `FORMAT`.
 
 ## Global rule: requirements first
 
@@ -19,7 +19,7 @@ Before applying any rule in this skill, read the task requirements (the brief). 
 Skip a check with `--skip NAME` (repeatable) on every `SCRIPT` and `FORMAT` command, so the excluded check is neither reported nor cleaned.
 
 - `SCRIPT` names (categories): `trap`, `filename`, `comments`, `tracked_changes`, `speaker_notes`, `slide_footer`, `metadata`, `hidden`, `placeholder`, `note`, `residue`, `ai_style`, `citations`, `format`.
-- `FORMAT` names: `calibri`, `code-box`, `header-title`, `slide-repeat`, `slide-sources`, `code-comments`.
+- `FORMAT` names: `calibri`, `code-box`, `header-title`, `slide-repeat`, `slide-sources`, `self-notes`, `code-comments`.
 
 Example: the brief asks for the title in the header and for comments in the code: `python3 FORMAT FILE --skip header-title --skip code-comments`.
 
@@ -32,6 +32,7 @@ Dawood's standing defaults. Apply them without asking (subject to the global rul
 - Comments, tracked changes (accepted), speaker notes, slide footer and date text, metadata: removed by `clean`. Author fields stay blank unless Dawood names an author.
 - Fill-in fields are blanked and their label kept: `Student: [Full name] — ID [Student ID]` becomes `Student:`. The student writes his own details.
 - Notes to the writer or student, tool and watermark marks, chatbot residue, markdown leftovers: deleted.
+- Self-notes: never write a note, assumption, reminder or reasoning for your own understanding into a deliverable. That covers document text, slides, cells, hidden text, comments, metadata and code comments. Keep it in the chat. When you find one in a file, delete it.
 - In-text citations stay only when the brief requires them. Otherwise clean with `--strip-citations`; the reference list stays.
 - The reference list follows the output language: an Arabic deliverable with an all-English reference list is a finding.
 - Every trap word from the brief is gone.
@@ -66,11 +67,11 @@ Ask Dawood only about: content the brief did not ask for, a reference list in th
 
 2. **Scan.** Run `python3 SCRIPT scan FILE... --find WORD` with one `--find` per trap word and one `--skip` per excluded category. For every docx, pptx and code file, also run `python3 FORMAT FILE... --find WORD` with one `--skip` per excluded check. Scan never edits. Done when every file has a report.
 
-3. **Check against the brief.** Compare the file with each brief field: output language, length (slides, words, pages), required sections present, citation and reference rules, format (style guide, RTL, template). For the formatting rules, check the report is plain when it comes with a project (by eye: `FORMAT` does not see colors), and take the `FORMAT` findings for Calibri in an English docx, code or command text in a box, header or footer text, a repeated deck title, sources on slides, and comments in code files. List anything present that the brief did not ask for as off-brief content. Done when each field is marked `match`, `mismatch` or `skipped`.
+3. **Check against the brief.** Compare the file with each brief field: output language, length (slides, words, pages), required sections present, citation and reference rules, format (style guide, RTL, template). For the formatting rules, check the report is plain when it comes with a project (by eye: `FORMAT` does not see colors), and take the `FORMAT` findings for Calibri in an English docx, code or command text in a box, header or footer text, a repeated deck title, sources on slides, self-notes, and comments in code files. List anything present that the brief did not ask for as off-brief content. Done when each field is marked `match`, `mismatch` or `skipped`.
 
-4. **Clean.** Run `python3 SCRIPT clean FILE --find WORD...` with the same `--skip` names, adding `--strip-citations` (docx) when the brief does not require in-text citations and `--thin-citations` when it does. The original stays untouched. Done when `<name>.clean.<ext>` exists and its re-scan shows zero `auto` findings. `clean` does not touch fonts, boxes, headers, sources on slides or code comments; step 5 does.
+4. **Clean.** Run `python3 SCRIPT clean FILE --find WORD...` with the same `--skip` names, adding `--strip-citations` (docx) when the brief does not require in-text citations and `--thin-citations` when it does. The original stays untouched. Done when `<name>.clean.<ext>` exists and its re-scan shows zero `auto` findings. `clean` does not touch fonts, boxes, headers, sources on slides, self-notes or code comments; step 5 does.
 
-5. **Fix the rest on the clean copy.** Edit with the matching format skill (docx, pptx, xlsx, pdf). Policy items first, without asking: delete notes, tool marks, residue and trap words; blank fill-in fields the script could not reach (a field split across runs); remove citations in pptx, xlsx and pdf when the policy says so; reset a report that carries project theme colors to plain formatting; change Calibri to Arial or Times New Roman in an English docx; remove shading, borders and boxes around code and command text; reduce headers and footers to the page number; delete source lines, image credits and a repeated deck title from the slides; strip unrequested comments from code files. Then put the ask items to Dawood in one message. For `ai_style` findings, read `references/humanizer-rules.md` and rewrite by its procedure. Done when each item is fixed or Dawood chose to keep it.
+5. **Fix the rest on the clean copy.** Edit with the matching format skill (docx, pptx, xlsx, pdf). Policy items first, without asking: delete notes, self-notes, tool marks, residue and trap words; blank fill-in fields the script could not reach (a field split across runs); remove citations in pptx, xlsx and pdf when the policy says so; reset a report that carries project theme colors to plain formatting; change Calibri to Arial or Times New Roman in an English docx; remove shading, borders and boxes around code and command text; reduce headers and footers to the page number; delete source lines, image credits and a repeated deck title from the slides; strip unrequested comments from code files. Then put the ask items to Dawood in one message. For `ai_style` findings, read `references/humanizer-rules.md` and rewrite by its procedure. Done when each item is fixed or Dawood chose to keep it.
 
 6. **Verify.** Re-run `scan` and `FORMAT` on the final file with the same `--find` and `--skip` arguments. Done when only items Dawood chose to keep remain. Save the final file under its delivery name (`-o NAME` on clean, or a renamed copy). Reply in one short message: the clean file, what the policy removed, the rules excluded by the requirements (the `--skip` names and why), the brief mismatches left, and the kept items.
 
@@ -93,7 +94,7 @@ Ask Dawood only about: content the brief did not ask for, a reference list in th
 | ai_style | manual | machine-sounding patterns: not-X-but-Y contrasts, dashes as connectors, stock words, inflated or sales wording, stock closers, emoji, bold-label lists |
 | citations | optional or manual | dense paragraphs; the same citation repeated in one paragraph |
 | hidden | manual | hidden text, slides and sheets |
-| format | manual | missing right-to-left direction, empty slides, error cells, blank pages. From `FORMAT`: Calibri in an English docx; code, command or output text inside a background box; header or footer text besides page numbers; the same text repeated on most slides; source lines and image credits on slides; comments in code files. Project theme colors in a report are checked by eye |
+| format | manual | missing right-to-left direction, empty slides, error cells, blank pages. From `FORMAT`: Calibri in an English docx; code, command or output text inside a background box; header or footer text besides page numbers; the same text repeated on most slides; source lines and image credits on slides; self-notes; comments in code files. Project theme colors in a report are checked by eye |
 
 The report also prints the reference list line (entries, Arabic, other) for docx and pptx.
 
