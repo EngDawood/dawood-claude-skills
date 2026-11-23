@@ -7,6 +7,12 @@ description: >
   reports an Arabic .pptx whose sentence-final period or multi-level number
   (1.2) shows on the wrong side, or wants shapes, diagrams or SmartArt in an
   Arabic deck.
+license: MIT
+metadata:
+  author: Dawood Saleh
+  author_url: https://engdawood.com
+  version: '0.1.0'
+  repository: https://github.com/EngDawood/arabic-pptx-skill
 ---
 
 # Arabic PPTX
