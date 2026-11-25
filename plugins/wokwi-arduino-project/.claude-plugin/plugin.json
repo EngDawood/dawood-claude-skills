@@ -1,0 +1,11 @@
+{
+  "name": "wokwi-arduino-project",
+  "version": "0.1.0",
+  "description": "Builds a Wokwi simulation, the Arduino sketch and the hardware wiring guide from one pin map.",
+  "author": {
+    "name": "EngDawood",
+    "url": "https://engdawood.com"
+  },
+  "license": "MIT",
+  "homepage": "https://engdawood.com"
+}

@@ -34,6 +34,11 @@
       "name": "steal-the-code",
       "source": "./plugins/steal-the-code",
       "description": "Legacy name of find-oss-alternative. Synced from the source repo."
+    },
+    {
+      "name": "wokwi-arduino-project",
+      "source": "./plugins/wokwi-arduino-project",
+      "description": "Builds a Wokwi simulation, the Arduino sketch and the hardware wiring guide from one pin map."
     }
   ]
 }
