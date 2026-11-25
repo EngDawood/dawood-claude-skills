@@ -14,6 +14,7 @@ English: [README.en.md](README.en.md)
 | arabic-docx-pptx | doc-to-word-rtl, arabic-pptx | وورد وبوربوينت بالعربي من اليمين لليسار. تُنسخ مهاراته تلقائياً من ريبوهات المصدر (انظر أدناه). |
 | find-oss-alternative | find-oss-alternative | البحث عن بدائل مفتوحة المصدر لمنتج أو أداة أو ميزة قبل البناء من الصفر، مع توصية: استخدم / استعر / تجنّب / ابنِ جديداً. تُنسخ مهارته تلقائياً من ريبو المصدر. |
 | steal-the-code | steal-the-code | الاسم القديم لـ find-oss-alternative (ريبو المصدر يعلن أنه لم يعد المرجع المحدَّث). تُنسخ مهارته تلقائياً. |
+| wokwi-arduino-project | wokwi-arduino-project | بناء محاكاة Wokwi وكود Arduino ودليل توصيل العتاد الحقيقي من جدول منافذ واحد، فتتطابق الثلاثة دائماً. |
 
 ## التثبيت
 
@@ -25,6 +26,7 @@ English: [README.en.md](README.en.md)
 /plugin install arabic-docx-pptx@dawood-skills
 /plugin install find-oss-alternative@dawood-skills
 /plugin install steal-the-code@dawood-skills
+/plugin install wokwi-arduino-project@dawood-skills
 ```
 
 ## مزامنة arabic-docx-pptx

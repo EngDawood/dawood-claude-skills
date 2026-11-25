@@ -14,6 +14,7 @@ A plugin marketplace for my skills. Each plugin lives in its own folder under `p
 | arabic-docx-pptx | doc-to-word-rtl, arabic-pptx | Arabic right-to-left Word and PowerPoint. Its skills are copied automatically from the source repos (see below). |
 | find-oss-alternative | find-oss-alternative | Finds open-source alternatives to a product, tool or feature before building from scratch, with a Use / Borrow / Avoid / Build New recommendation. Its skill is copied automatically from the source repo. |
 | steal-the-code | steal-the-code | Legacy name of find-oss-alternative (the source repo says it is no longer the maintained entry point). Its skill is copied automatically. |
+| wokwi-arduino-project | wokwi-arduino-project | Builds a Wokwi simulation, the Arduino sketch and the physical wiring guide from one pin map, so all three always match. |
 
 ## Install
 
@@ -25,6 +26,7 @@ A plugin marketplace for my skills. Each plugin lives in its own folder under `p
 /plugin install arabic-docx-pptx@dawood-skills
 /plugin install find-oss-alternative@dawood-skills
 /plugin install steal-the-code@dawood-skills
+/plugin install wokwi-arduino-project@dawood-skills
 ```
 
 ## arabic-docx-pptx sync
