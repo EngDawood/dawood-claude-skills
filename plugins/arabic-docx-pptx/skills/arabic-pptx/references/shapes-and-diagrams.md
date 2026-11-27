@@ -5,7 +5,7 @@
 Build diagrams from native shapes (rectangle, roundRect, ellipse, chevron,
 homePlate, leftArrow, connectors), with the label inside the shape's own text
 body. They stay editable in PowerPoint and their text obeys the same
-`rtl="1"` rule as any paragraph; `rtl_fix.py` covers them.
+`rtl="1"` rule as any paragraph; the RTL pass covers them.
 
 - pptxgenjs: `slide.addShape(pptx.ShapeType.roundRect, {...})`, or
   `slide.addText(label, { shape: pptx.ShapeType.roundRect, rtlMode: true, ... })`

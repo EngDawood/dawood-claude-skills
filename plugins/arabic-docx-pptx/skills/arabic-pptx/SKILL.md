@@ -1,18 +1,6 @@
 ---
 name: arabic-pptx
-description: >
-  Builds and repairs Arabic right-to-left PowerPoint decks so direction,
-  punctuation, numbering and tables render correctly. Use when the user asks
-  for a presentation in Arabic ("عرض بوربوينت بالعربي", "برزنتيشن", "عرض تقديمي"),
-  reports an Arabic .pptx whose sentence-final period or multi-level number
-  (1.2) shows on the wrong side, or wants shapes, diagrams or SmartArt in an
-  Arabic deck.
-license: MIT
-metadata:
-  author: Dawood Saleh
-  author_url: https://engdawood.com
-  version: '0.1.0'
-  repository: https://github.com/EngDawood/arabic-pptx-skill
+description: Builds and repairs Arabic right-to-left PowerPoint decks so direction, punctuation, numbering and tables render correctly. Use when the user asks for a presentation in Arabic ("عرض بوربوينت بالعربي", "برزنتيشن", "عرض تقديمي"), reports an Arabic .pptx whose sentence-final period or multi-level number (1.2) shows on the wrong side, or wants shapes, diagrams or SmartArt in an Arabic deck.
 ---
 
 # Arabic PPTX
@@ -45,17 +33,14 @@ halves, and both are required:
    options where the tool has them (pptxgenjs: `rtlMode: true, align: 'right',
    lang: 'ar-SA'` on each text call); the next step is the guarantee either way.
 
-4. **Run the fixer** on the generated file:
-
-   ```bash
-   python3 "${CLAUDE_PLUGIN_ROOT}/skills/arabic-pptx/scripts/rtl_fix.py" deck.pptx
-   ```
-
-   It sets `rtl="1"`, right alignment, `lang="ar-SA"`, the complex-script font
-   and table direction on every Arabic paragraph, in slides, layouts and
-   masters, then re-checks its own output. Resolve each `WARN` line by retyping
-   that string in logical order in the generator source, then regenerate.
-   Done when it prints `OK: 0 issues, 0 warnings`.
+4. **Run the RTL pass** on the generated file: a short Python + lxml program
+   you write by the *RTL pass* section of `references/ooxml-rtl.md`
+   (`pip install lxml` when the import fails). It sets `rtl="1"`, right
+   alignment, `lang="ar-SA"`, the complex-script font and table direction on
+   every Arabic paragraph, in slides, layouts and masters, then re-checks its
+   own output. Resolve each warning by retyping that string in logical order in
+   the generator source, then regenerate.
+   Done when the re-check reports 0 issues and 0 warnings.
 
 5. **Look at every slide.** Render (`soffice --headless --convert-to pdf`, then
    `pdftoppm -png -r 60`) and view each image. On each slide confirm: the period
@@ -63,10 +48,9 @@ halves, and both are required:
    heading, and the layout matches the mirror table.
    Done when every slide image has been viewed and passes all three.
 
-To repair an existing Arabic deck, start at step 4. Add `--slides-only` when
-the deck's master belongs to a template that must stay untouched, and
-`--keep-table-order` when the table columns were already reversed by hand.
-`--check` reports without writing.
+To repair an existing Arabic deck, start at step 4. Leave masters and layouts
+untouched when they belong to a template that must stay as it is, and leave
+table direction alone when the columns were already reversed by hand.
 
 ## Mirror table
 
@@ -78,7 +62,7 @@ the deck's master belongs to a template that must stay untouched, and
 | Text + visual split | Text right, visual left |
 | Columns, cards, steps | First item rightmost, last leftmost |
 | Process arrows, chevrons, timelines | Flow right to left, arrows point left |
-| Table | First column rightmost (the fixer does this; write columns in logical order) |
+| Table | First column rightmost (the RTL pass does this; write columns in logical order) |
 | Slide number | Bottom-left |
 | Logo | Top-left |
 | Photos, charts' bar order, phone numbers, URLs, code | Unchanged |
@@ -108,9 +92,9 @@ reading order.
 
 ## References
 
-- `references/ooxml-rtl.md`: the exact XML the fixer writes. Read when editing
-  slide XML by hand, when Python is unavailable (for example inside the
+- `references/ooxml-rtl.md`: the RTL pass (step 4) and the exact XML it writes.
+  Read at step 4, when editing slide XML by hand (for example inside the
   PowerPoint add-in), or when a renderer still shows a direction fault after
-  the fixer reports OK.
+  the pass reports 0 issues.
 - `references/shapes-and-diagrams.md`: read when the deck needs shapes, a
   process flow, a timeline, an org chart, or the user asks for SmartArt.

@@ -11,7 +11,7 @@ English: [README.en.md](README.en.md)
 | freelance-tools | project-analyzer, deliverable-check | تحليل مطلوب المشروع قبل التنفيذ، وفحص ملفات التسليم (docx وpptx وxlsx وpdf) قبل إرسالها وكتابة نسخة نظيفة. |
 | google-forms-script-generator | google-forms-script-generator | تحويل أسئلة استبيان إلى سكربت Apps Script يبني Google Form. |
 | user-docx | user-docx | إنشاء ملفات Word وتعديلها، مع التعليقات والتعديلات المتتبعة وتحويل Markdown إلى Word. |
-| arabic-docx-pptx | doc-to-word-rtl, arabic-pptx | وورد وبوربوينت بالعربي من اليمين لليسار. تُنسخ مهاراته تلقائياً من ريبوهات المصدر (انظر أدناه). |
+| arabic-docx-pptx | arabic-docx, english-docx, arabic-pptx | وورد عربي وإنجليزي وبوربوينت عربي. تُنسخ مهاراته تلقائياً من ريبو المصدر (انظر أدناه). |
 | find-oss-alternative | find-oss-alternative | البحث عن بدائل مفتوحة المصدر لمنتج أو أداة أو ميزة قبل البناء من الصفر، مع توصية: استخدم / استعر / تجنّب / ابنِ جديداً. تُنسخ مهارته تلقائياً من ريبو المصدر. |
 | steal-the-code | steal-the-code | الاسم القديم لـ find-oss-alternative (ريبو المصدر يعلن أنه لم يعد المرجع المحدَّث). تُنسخ مهارته تلقائياً. |
 | wokwi-arduino-project | wokwi-arduino-project | بناء محاكاة Wokwi وكود Arduino ودليل توصيل العتاد الحقيقي من جدول منافذ واحد، فتتطابق الثلاثة دائماً. |
@@ -31,12 +31,9 @@ English: [README.en.md](README.en.md)
 
 ## مزامنة arabic-docx-pptx
 
-الملف `.github/workflows/sync-arabic-docx-pptx.yml` يعمل يومياً (ويدوياً من تبويب Actions) وينسخ المهارتين من:
+الملف `.github/workflows/sync-arabic-docx-pptx.yml` يعمل يومياً (ويدوياً من تبويب Actions) وينسخ كل المهارات من ريبو واحد: [arabic-docx-pptx-skills](https://github.com/EngDawood/arabic-docx-pptx-skills) (فرع main) إلى `plugins/arabic-docx-pptx/skills`.
 
-- [claude-doc-to-docx-arabic](https://github.com/EngDawood/claude-doc-to-docx-arabic) إلى `skills/doc-to-word-rtl`
-- [arabic-pptx-skill](https://github.com/EngDawood/arabic-pptx-skill) (الاسم الحالي للريبو claude-slide-to-pptx-arabic) إلى `skills/arabic-pptx`
-
-إن تغيّر شيء يرفع commit على الفرع الرئيسي ويزيد رقم الإصدار (patch) في `plugin.json`، لأن تحديث البلوقن عند المستخدمين يحتاج رقماً جديداً. وإن لم يجد `version` في `plugin.json` أضافه (0.1.0). ويسجّل في `SOURCES.md` نسخة كل ريبو مصدر. لا تعدّل المهارتين هنا، عدّلهما في ريبو المصدر. التشغيل محلياً: `.github/scripts/sync-arabic-docx-pptx.sh`.
+إن تغيّر شيء يرفع commit على الفرع الرئيسي ويأخذ رقم الإصدار من `plugin.json` في ريبو المصدر (ارفعه هناك عند كل تغيير، لأن تحديث البلوقن عند المستخدمين يحتاج رقماً جديداً). ويسجّل في `SOURCES.md` نسخة المصدر. لا تعدّل المهارات هنا، عدّلها في ريبو المصدر. التشغيل محلياً: `.github/scripts/sync-arabic-docx-pptx.sh`.
 
 ## مزامنة find-oss-alternative
 

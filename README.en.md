@@ -11,7 +11,7 @@ A plugin marketplace for my skills. Each plugin lives in its own folder under `p
 | freelance-tools | project-analyzer, deliverable-check | Analyzes a new project brief before work starts, and checks delivery files (docx, pptx, xlsx, pdf) before sending, then writes a clean copy. |
 | google-forms-script-generator | google-forms-script-generator | Turns survey questions into an Apps Script that builds the Google Form. |
 | user-docx | user-docx | Creates and edits Word files, including comments, tracked changes and Markdown to Word. |
-| arabic-docx-pptx | doc-to-word-rtl, arabic-pptx | Arabic right-to-left Word and PowerPoint. Its skills are copied automatically from the source repos (see below). |
+| arabic-docx-pptx | arabic-docx, english-docx, arabic-pptx | Arabic and English Word and Arabic right-to-left PowerPoint. Its skills are copied automatically from the source repo (see below). |
 | find-oss-alternative | find-oss-alternative | Finds open-source alternatives to a product, tool or feature before building from scratch, with a Use / Borrow / Avoid / Build New recommendation. Its skill is copied automatically from the source repo. |
 | steal-the-code | steal-the-code | Legacy name of find-oss-alternative (the source repo says it is no longer the maintained entry point). Its skill is copied automatically. |
 | wokwi-arduino-project | wokwi-arduino-project | Builds a Wokwi simulation, the Arduino sketch and the physical wiring guide from one pin map, so all three always match. |
@@ -31,12 +31,9 @@ A plugin marketplace for my skills. Each plugin lives in its own folder under `p
 
 ## arabic-docx-pptx sync
 
-`.github/workflows/sync-arabic-docx-pptx.yml` runs daily (and on demand from the Actions tab) and copies the two skills from:
+`.github/workflows/sync-arabic-docx-pptx.yml` runs daily (and on demand from the Actions tab) and copies all skills from one source repo, [arabic-docx-pptx-skills](https://github.com/EngDawood/arabic-docx-pptx-skills) (main branch), into `plugins/arabic-docx-pptx/skills`.
 
-- [claude-doc-to-docx-arabic](https://github.com/EngDawood/claude-doc-to-docx-arabic) into `skills/doc-to-word-rtl`
-- [arabic-pptx-skill](https://github.com/EngDawood/arabic-pptx-skill) (the current name of the claude-slide-to-pptx-arabic repo) into `skills/arabic-pptx`
-
-When something changed it commits to the default branch and bumps the patch version in `plugin.json`, because installed plugins only update on a new version. If `plugin.json` has no `version`, it adds 0.1.0. `SOURCES.md` records each source repo's version. Do not edit these two skills here; edit them in their source repos. Run locally with `.github/scripts/sync-arabic-docx-pptx.sh`.
+When something changed it commits to the default branch and takes the version from the source's `plugin.json` (bump it there on every change, because installed plugins only update on a new version). `SOURCES.md` records the source commit. Do not edit the skills here; edit them in the source repo. Run locally with `.github/scripts/sync-arabic-docx-pptx.sh`.
 
 ## find-oss-alternative sync
 

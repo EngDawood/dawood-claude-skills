@@ -1,6 +1,41 @@
 # OOXML for right-to-left text
 
-What `scripts/rtl_fix.py` writes, for applying by hand.
+The RTL pass (step 4 of the skill) and the XML it writes.
+
+## RTL pass
+
+Open the .pptx as a zip and parse these parts with lxml (namespace
+`a` = `http://schemas.openxmlformats.org/drawingml/2006/main`):
+`ppt/slides/*.xml`, and unless the template must stay untouched,
+`ppt/slideLayouts/*.xml`, `ppt/slideMasters/*.xml` and `ppt/presentation.xml`.
+Write every other part back byte for byte.
+
+- **Arabic text**: letters in U+0600–06FF, 0750–077F, 08A0–08FF, FB50–FDFF,
+  FE70–FEFF. The deck is Arabic when its slides have at least as many Arabic
+  paragraphs as Latin-only ones.
+- **Each `a:p`** that has Arabic text (or has no Latin text, in an Arabic deck):
+  `a:pPr` (created as the first child when missing) gets `rtl="1"`; with Arabic
+  text and no `algn`, it gets `algn="r"` unless the paragraph sits in a shape
+  with a `ph` placeholder (alignment comes from the layout); `algn="l"` becomes
+  `algn="r"`.
+- **Each `a:r` and `a:fld`** with Arabic text: `a:rPr` (first child) gets
+  `lang="ar-SA"`; when it has an `a:latin` with a real face (not `+mn-lt`
+  style theme refs), `a:cs` gets the same `typeface`, placed after `a:ea` or
+  else after `a:latin`.
+- **`a:bodyPr`** whose shape holds Arabic text: `rtlCol="1"`.
+- **`a:tbl`** with Arabic text: `a:tblPr` (first child) gets `rtl="1"`, unless
+  the columns were reversed by hand.
+- **Masters and defaults**: in an Arabic deck, every `a:lvl1pPr`…`a:lvl9pPr`
+  gets `rtl="1"`; `algn="l"` becomes `"r"`; with no `algn`, masters and
+  `presentation.xml` get `algn="r"`.
+
+**Warnings** (fix in the generator source, then regenerate): an Arabic
+paragraph that starts with punctuation (`. ، ؛ : ! ؟ …`) before its first
+letter; bidi control characters (U+200E, 200F, 202A–202E, 2066–2069) in the
+text; presentation-form letters (U+FB50–FDFF, FE70–FEFF).
+
+**Re-check**: run the same rules read-only on the written file and count every
+place a rule would still change something. Done at 0 issues and 0 warnings.
 
 ## Paragraph
 
@@ -58,7 +93,7 @@ A column chart reads right to left when the category axis is reversed:
 then draws on the right. Apply it when the categories are a sequence the
 audience reads in order (years, quarters, steps).
 
-## When a fault survives the fixer
+## When a fault survives the RTL pass
 
 | Symptom | Cause | Fix |
 |---|---|---|
