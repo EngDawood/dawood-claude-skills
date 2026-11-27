@@ -26,7 +26,7 @@ Print one summary line at the end: `cover no|yes (separate page); toc no|yes; eq
 ## Paragraphs and runs
 
 - Every run sets `w:rFonts` (ascii/hAnsi/eastAsia), `w:sz`, colour; bold adds `w:b`, italic `w:i`.
-- Body is left-aligned (no `w:jc`), no first-line indent.
+- Body paragraphs and list items are **justified**: `<w:jc w:val="both"/>` (`WD_ALIGN_PARAGRAPH.JUSTIFY`). Headings, the title, captions, table cells and code stay left-aligned. No first-line indent.
 - Caption line (`Table n: …`, `Figure n: …`): 10 pt italic, 6 before, 4 after, keep with next.
 
 ## Lists
@@ -66,8 +66,17 @@ Everything before the first real `##` is the cover, when there is more than a ti
 - **A table on the cover is printed as lines**, never as a Word table: two columns with a generic header (Item, Field, Details, Value) or a lone row become one `**label:** value` line per row; otherwise the header joined by ` - ` in bold, then each row joined by ` - `.
 - **No header, footer or page number on the cover.** The body section's footer is unlinked from the previous one and holds the centered `PAGE` field; add `<w:pgNumType w:start="1"/>` right after `w:pgMar` so the body's first page is numbered 1.
 - A trailing page break at the end of the cover is removed, so no blank page appears; the section break does the work.
-- **Contents page** (only when asked): between the cover and the body, a centered bold `Contents` 16 pt, then one paragraph holding a TOC field (`TOC \o "2-3" \h \z \u`, begin/instr/separate/hint/end runs, `w:dirty="true"`), plus `<w:updateFields w:val="true"/>` in settings so Word fills it on open. Verify by rendering: LibreOffice shows the hint line, Word fills the entries.
+- **Contents page**: only when asked; see *Table of contents* below.
 - No cover: one section, page number in the footer from page 1.
+
+## Table of contents (only when asked)
+
+- Headings must be real `Heading 1`–`3` styles (`##`–`####`), otherwise the field finds nothing. The `#` Title style stays out of the contents.
+- Placement: after the cover (own page) or at the top of page 1 when there is no cover; a page break after it so the body starts on a new page.
+- Title: centered bold `Contents` 16 pt, 12 after (a plain paragraph, not a heading).
+- Field: one paragraph with runs `<w:fldChar w:fldCharType="begin" w:dirty="true"/>`, `<w:instrText xml:space="preserve"> TOC \o "1-3" \h \z \u </w:instrText>`, `<w:fldChar w:fldCharType="separate"/>`, a hint run (`Right-click and choose Update Field to refresh the contents.`, 10 pt), `<w:fldChar w:fldCharType="end"/>`. Add `<w:updateFields w:val="true"/>` to the settings part so Word fills the entries and page numbers when the file opens.
+- `TOC 1`–`TOC 3` styles (create with styleId `TOC1`… when missing): same font family, 11 pt, level 1 bold, a right tab with dot leader at the text width in twips, 60 twips after, indent `(level − 1) × 400` twips.
+- Verify: LibreOffice shows only the hint line; Word shows the entries. Tell the user Word asks to update fields on open and Yes fills the contents.
 
 ## Metadata and clean output
 

@@ -11,7 +11,7 @@ Turn a Claude Doc, or content you write yourself, into a normal-looking English 
 - Nothing customized → the plain style below.
 - User names APA 7 (or a client template says so) → read `references/apa7.md` and use it in place of the plain style. Never use APA on your own.
 - Another named style (MLA, Harvard, IEEE): follow the user's rules value by value; the plain style fills the gaps.
-- A cover page only when the user asks for one, or when the content before the first `##` is title-page material (institution, title, name fields, date). The cover is always **its own separate page**: alone on page 1, nothing else on it, no page number, and the body starts on a new page numbered from 1. A contents page follows the cover only when asked. Recipe in `docx-recipes.md`.
+- A cover page only when the user asks for one, or when the content before the first `##` is title-page material (institution, title, name fields, date). The cover is always **its own separate page**: alone on page 1, nothing else on it, no page number, and the body starts on a new page numbered from 1. A table of contents only when the user asks for one (see *Table of contents* in `docx-recipes.md`); it follows the cover. Recipe in `docx-recipes.md`.
 - Arabic or mixed Arabic/English document: use the `arabic-docx` skill instead.
 
 **Two routes.** Pick one before step 1:
@@ -56,14 +56,14 @@ The file leaves the builder ready to hand over; nothing is cleaned afterwards. E
 |---|---|
 | Page | A4, margins 2.54 cm, page number centered in the footer (omit for a one-page doc) |
 | Font | Arial by default; Times New Roman when the user asks for it or the template uses it. One family for the whole document: body, headings, tables, captions. Never Calibri (Word's default) |
-| Body | 11 pt, black, left-aligned, line 1.15, 8 pt after, no first-line indent |
+| Body | 11 pt, black, **justified**, line 1.15, 8 pt after, no first-line indent |
 | `#` | document title, 20 bold, left-aligned; Title style |
 | `##` | 16 bold |
 | `###` | 13 bold |
 | `####` | 11 bold |
 | Table | full width, all thin grey borders, header bold on light grey (F2F2F2) and repeated, rows unsplit, cells 10.5 pt |
 | Caption (`Table n: …`, `Figure n: …`) | 10 italic, kept with its table or picture |
-| Lists | normal bullets and numbers, 4 pt after, every numbered list restarts at 1 |
+| Lists | normal bullets and numbers, justified, 4 pt after, every numbered list restarts at 1 |
 | Equations | native Word equations, Cambria Math 12, centered |
 | Pictures | centered, scaled to the text width (at most 18 cm tall), caption under |
 | Code | Consolas 10, left-aligned |
