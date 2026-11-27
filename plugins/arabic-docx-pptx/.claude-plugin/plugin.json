@@ -1,6 +1,6 @@
 {
   "name": "arabic-docx-pptx",
-  "version": "1.3.4",
+  "version": "1.3.5",
   "description": "Arabic right-to-left Word and PowerPoint: Claude Doc to .docx (Saudi thesis style), plain English .docx (APA only on request), and Arabic RTL decks. Synced from EngDawood/arabic-docx-pptx-skills by a GitHub Action.",
   "author": {
     "name": "EngDawood",

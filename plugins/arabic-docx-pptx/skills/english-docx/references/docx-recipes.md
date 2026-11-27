@@ -19,7 +19,7 @@ Print one summary line at the end: `cover no|yes (separate page); toc no|yes; eq
 
 - Values below are the plain-style defaults. Replace each one the user customized (font, size, spacing, margins, paper, heading sizes); with a user template, open it and add content to it so its styles stay.
 - A4, portrait, margins 2.54 cm.
-- `Normal` style: the chosen family (Times New Roman by default, Arial when asked) at 12 pt, set on every style and run; never leave the Word default Calibri, colour black, line spacing 1.15, 8 pt after. Remove any `w:asciiTheme`/`w:hAnsiTheme`/`w:eastAsiaTheme`/`w:cstheme` attributes from `w:rFonts` in every style you touch; theme fonts override the face you set.
+- `Normal` style: the chosen family (Times New Roman by default, Arial when asked) at 12 pt, set on every style and run; never leave the Word default Calibri, colour black, line spacing 1.5 (`paragraph_format.line_spacing = 1.5`; table cells, captions and code stay 1.0), 8 pt after. Remove any `w:asciiTheme`/`w:hAnsiTheme`/`w:eastAsiaTheme`/`w:cstheme` attributes from `w:rFonts` in every style you touch; theme fonts override the face you set.
 - `Title` 20 bold, left; `Heading 1`–`3` = `##`/`###`/`####` at 16 / 14 / 12 bold, black, 12 before and 4 after, keep with next. Remove the Title style's `w:pBdr`.
 - Footer: centered `PAGE` field (begin / instrText `PAGE` / end, 10 pt).
 

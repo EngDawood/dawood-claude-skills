@@ -56,7 +56,7 @@ The file leaves the builder ready to hand over; nothing is cleaned afterwards. E
 |---|---|
 | Page | A4, margins 2.54 cm, page number centered in the footer (omit for a one-page doc) |
 | Font | Times New Roman by default; Arial when the user asks for it or the template uses it. One family for the whole document: body, headings, tables, captions. Never Calibri (Word's default) |
-| Body | 12 pt, black, **justified**, line 1.15, 8 pt after, no first-line indent |
+| Body | 12 pt, black, **justified**, line spacing 1.5, 8 pt after, no first-line indent |
 | `#` | document title, 20 bold, left-aligned; Title style |
 | `##` | 16 bold |
 | `###` | 14 bold |
