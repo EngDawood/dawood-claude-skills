@@ -5,13 +5,13 @@ description: Builds English Word .docx files in a plain, normal look (Times New 
 
 # English docx (Claude Doc → Word, or Word directly)
 
-Turn a Claude Doc, or content you write yourself, into a normal-looking English .docx. Default is **plain and simple**: no cover, no contents page, no academic formatting. You build each file with a short python-docx builder that you write in the scratch folder, following `references/docx-recipes.md`.
+Turn a Claude Doc, or content you write yourself, into a normal-looking English .docx. Default is **plain and simple** with a separate cover page and a table of contents; no academic formatting. You build each file with a short python-docx builder that you write in the scratch folder, following `references/docx-recipes.md`.
 
 - **Check the user's customization first, before using any style of this skill.** Look, in this order, for: (1) formatting the user named in the request or the brief (font, size, spacing, margins, paper, headings, cover, style guide); (2) a template or sample .docx the user attached or pointed to (copy its styles, do not rebuild them); (3) formatting rules in the conversation, the project files, or a client brief. Every value found there wins over this skill's value, one value at a time. Only the values the user left open fall back to the plain style below. Done when you can say, per value, whether it came from the user or from the plain style.
 - Nothing customized → the plain style below.
 - User names APA 7 (or a client template says so) → read `references/apa7.md` and use it in place of the plain style. Never use APA on your own.
 - Another named style (MLA, Harvard, IEEE): follow the user's rules value by value; the plain style fills the gaps.
-- A cover page only when the user asks for one, or when the content before the first `##` is title-page material (institution, title, name fields, date). The cover is always **its own separate page**: alone on page 1, nothing else on it, no page number, and the body starts on a new page numbered from 1. A table of contents only when the user asks for one (see *Table of contents* in `docx-recipes.md`); it follows the cover. Recipe in `docx-recipes.md`.
+- **Cover and contents by default.** Every document gets a cover page that is **its own separate page** (alone on page 1, its content centered across and down the page, no page number) and a table of contents on the next page; the body starts on a new page numbered from 1 (see *Cover page* and *Table of contents* in `docx-recipes.md`). The cover shows the title and whatever title-page lines the content or the user gave (institution, name fields, date); never invent fields. Leave both out only when the user says so, or for a letter, memo or note of one or two pages. APA's own title page is not this cover.
 - Arabic or mixed Arabic/English document: use the `arabic-docx` skill instead.
 
 **Two routes.** Pick one before step 1:
@@ -62,15 +62,16 @@ The file leaves the builder ready to hand over; nothing is cleaned afterwards. E
 | `###` | 14 bold |
 | `####` | 12 bold |
 | Table | full width, all thin grey borders, header bold on light grey (F2F2F2) and repeated, rows unsplit, cells 11 pt |
-| Caption (`Table n: …`, `Figure n: …`) | 10 italic, kept with its table or picture |
+| Caption (`Table n: …`, `Figure n: …`) | 11 italic, **centered**; above a table, below a picture; kept with it |
 | Lists | normal bullets and numbers, justified, 4 pt after, every numbered list restarts at 1 |
 | Equations | native Word equations, Cambria Math 12, centered |
 | Pictures | centered, scaled to the text width (at most 18 cm tall), caption under |
 | Code | Consolas 10, left-aligned |
-| Cover (when present) | separate first page, every line centered, institution lines on top, title large below, `label: value` fields under it, date line near the bottom; no header, footer or page number |
+| Cover | separate first page; every line centered horizontally and the block centered vertically on the page; institution lines on top, title large, `label: value` fields under it, date line last; no header, footer or page number |
+| Table of contents | on its own page after the cover, title `Contents` centered; filled by Word on open |
 | `---` | page break |
 | `date · @name` line under the title | removed |
 
 ## Writing the markdown (direct route)
 
-Plain markdown. For a cover, put its lines before the first `##`, top to bottom: institution lines, `# Title`, `**Label:** value` fields, a closing date line. Then `#` title, `##`/`###` sections, pipe tables with a caption line above, `-` and `1.` lists, `$$…$$` equations, `![alt](/abs/path.png)` pictures. Write the sections the user asked for, in full prose; no filler headings. A field the user has not given keeps its label with an empty value (`Student:`).
+Plain markdown. For the cover, put its lines before the first `##`, top to bottom: institution lines, `# Title`, `**Label:** value` fields, a closing date line. Then `#` title, `##`/`###` sections, pipe tables with a caption line above, `-` and `1.` lists, `$$…$$` equations, `![alt](/abs/path.png)` pictures. Write the sections the user asked for, in full prose; no filler headings. A field the user has not given keeps its label with an empty value (`Student:`).

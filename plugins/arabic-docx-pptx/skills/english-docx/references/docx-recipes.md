@@ -13,7 +13,7 @@ One file, `<scratch>/build.py`, that reads the markdown, walks it line by line i
 - Inline `**bold**`, `*italic*`, `` `code` ``, `[text](url)` (keep the text); unescape `\* \_ \[ \] \# \- \.`.
 - A paragraph is consecutive non-blank lines joined by spaces. `---` is a page break. The `date · @name` line right under the `#` title is dropped.
 
-Print one summary line at the end: `cover no|yes (separate page); toc no|yes; equations N; images N embedded, M missing; tables N`.
+Print one summary line at the end: `cover yes|no (separate page, centered); toc yes|no; equations N; images N embedded, M missing; tables N`.
 
 ## Document setup
 
@@ -26,8 +26,8 @@ Print one summary line at the end: `cover no|yes (separate page); toc no|yes; eq
 ## Paragraphs and runs
 
 - Every run sets `w:rFonts` (ascii/hAnsi/eastAsia), `w:sz`, colour; bold adds `w:b`, italic `w:i`.
-- Body paragraphs and list items are **justified**: `<w:jc w:val="both"/>` (`WD_ALIGN_PARAGRAPH.JUSTIFY`). Headings, the title, captions, table cells and code stay left-aligned. No first-line indent.
-- Caption line (`Table n: …`, `Figure n: …`): 10 pt italic, 6 before, 4 after, keep with next.
+- Body paragraphs and list items are **justified**: `<w:jc w:val="both"/>` (`WD_ALIGN_PARAGRAPH.JUSTIFY`). Headings, the title, table cells and code stay left-aligned; captions are centered. No first-line indent.
+- Caption line (`Table n: …`, `Figure n: …`): 11 pt italic, **centered** (`WD_ALIGN_PARAGRAPH.CENTER`), 6 before, 4 after, keep with next. A table's caption goes above the table, a figure's below the picture.
 
 ## Lists
 
@@ -57,22 +57,23 @@ A centered paragraph, 4 pt before and after, line 1.0, keep with next, holding `
 
 Centered paragraph, 6 before, 4 after, keep with next; width scaled down to the text width and height to at most 18 cm (`run.add_picture(path, width=…)`). A chart's caption goes under it. A missing file leaves `[image: alt]` as text and counts as missing.
 
-## Cover page (separate page) and contents page
+## Cover page (separate page)
 
-Everything before the first real `##` is the cover, when there is more than a title.
+On by default. Everything before the first real `##` is the cover; when there is only a title, the cover is the title alone.
 
 - **Own section**: the cover is the first section and holds only its own lines. The body is a new section (`WD_SECTION.NEW_PAGE`), so the cover always sits alone on page 1.
-- **Layout**: each line its own centered paragraph. Lines above the `#` title (institution block): bold, 0 before, 2 after. Title: 26 pt bold (set `w:szCs` too), 110 pt before (160 when nothing sits above it), 70 after. Lines under the title (fields as `label: value`): 0 before, 8 after. A standalone last line (a date) gets 70 pt before.
+- **Centering**: every line is its own paragraph with `jc=center`, and the cover section is centered vertically: add `<w:vAlign w:val="center"/>` to the cover section's `w:sectPr` (after `w:pgMar`, before `w:docGrid`). Do not push the title down with big space-before values; vertical centering does that.
+- **Layout**: lines above the `#` title (institution block): bold, 0 before, 2 after. Title: 26 pt bold (set `w:szCs` too), 24 before, 24 after. Lines under the title (fields as `label: value`): 0 before, 8 after. A standalone last line (a date): 24 pt before. Line spacing 1.0 on the cover.
 - **A table on the cover is printed as lines**, never as a Word table: two columns with a generic header (Item, Field, Details, Value) or a lone row become one `**label:** value` line per row; otherwise the header joined by ` - ` in bold, then each row joined by ` - `.
 - **No header, footer or page number on the cover.** The body section's footer is unlinked from the previous one and holds the centered `PAGE` field; add `<w:pgNumType w:start="1"/>` right after `w:pgMar` so the body's first page is numbered 1.
 - A trailing page break at the end of the cover is removed, so no blank page appears; the section break does the work.
-- **Contents page**: only when asked; see *Table of contents* below.
-- No cover: one section, page number in the footer from page 1.
+- **Contents page**: on by default, right after the cover; see *Table of contents* below.
+- Without a cover (the user said so, or a short letter or note): one section, page number in the footer from page 1.
 
-## Table of contents (only when asked)
+## Table of contents (default)
 
 - Headings must be real `Heading 1`–`3` styles (`##`–`####`), otherwise the field finds nothing. The `#` Title style stays out of the contents.
-- Placement: after the cover (own page) or at the top of page 1 when there is no cover; a page break after it so the body starts on a new page.
+- Placement: on its own page right after the cover (a page break after it so the body starts on a new page); with no cover, at the top of page 1.
 - Title: centered bold `Contents` 16 pt, 12 after (a plain paragraph, not a heading).
 - Field: one paragraph with runs `<w:fldChar w:fldCharType="begin" w:dirty="true"/>`, `<w:instrText xml:space="preserve"> TOC \o "1-3" \h \z \u </w:instrText>`, `<w:fldChar w:fldCharType="separate"/>`, a hint run (`Right-click and choose Update Field to refresh the contents.`, 10 pt), `<w:fldChar w:fldCharType="end"/>`. Add `<w:updateFields w:val="true"/>` to the settings part so Word fills the entries and page numbers when the file opens.
 - `TOC 1`–`TOC 3` styles (create with styleId `TOC1`… when missing): same font family, 11 pt, level 1 bold, a right tab with dot leader at the text width in twips, 60 twips after, indent `(level − 1) × 400` twips.
