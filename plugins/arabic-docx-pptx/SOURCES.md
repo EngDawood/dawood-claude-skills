@@ -2,7 +2,7 @@
 
 Do not edit the skills here. They are copied by `.github/workflows/sync-arabic-docx-pptx.yml` from:
 
-- `https://github.com/EngDawood/arabic-docx-pptx-skills` at `79a68b4` (source version: 1.3.3)
+- `https://github.com/EngDawood/arabic-docx-pptx-skills` at `d2ad3f8` (source version: 1.3.4)
   - skill `arabic-docx`
   - skill `arabic-pptx`
   - skill `english-docx`

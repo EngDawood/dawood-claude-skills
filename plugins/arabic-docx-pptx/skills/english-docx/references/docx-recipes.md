@@ -19,8 +19,8 @@ Print one summary line at the end: `cover no|yes (separate page); toc no|yes; eq
 
 - Values below are the plain-style defaults. Replace each one the user customized (font, size, spacing, margins, paper, heading sizes); with a user template, open it and add content to it so its styles stay.
 - A4, portrait, margins 2.54 cm.
-- `Normal` style: the chosen family (Arial, or Times New Roman when asked) at 11 pt, set on every style and run; never leave the Word default Calibri, colour black, line spacing 1.15, 8 pt after. Remove any `w:asciiTheme`/`w:hAnsiTheme`/`w:eastAsiaTheme`/`w:cstheme` attributes from `w:rFonts` in every style you touch; theme fonts override the face you set.
-- `Title` 20 bold, left; `Heading 1`–`3` = `##`/`###`/`####` at 16 / 13 / 11 bold, black, 12 before and 4 after, keep with next. Remove the Title style's `w:pBdr`.
+- `Normal` style: the chosen family (Times New Roman by default, Arial when asked) at 12 pt, set on every style and run; never leave the Word default Calibri, colour black, line spacing 1.15, 8 pt after. Remove any `w:asciiTheme`/`w:hAnsiTheme`/`w:eastAsiaTheme`/`w:cstheme` attributes from `w:rFonts` in every style you touch; theme fonts override the face you set.
+- `Title` 20 bold, left; `Heading 1`–`3` = `##`/`###`/`####` at 16 / 14 / 12 bold, black, 12 before and 4 after, keep with next. Remove the Title style's `w:pBdr`.
 - Footer: centered `PAGE` field (begin / instrText `PAGE` / end, 10 pt).
 
 ## Paragraphs and runs
@@ -38,7 +38,7 @@ Print one summary line at the end: `cover no|yes (separate page); toc no|yes; eq
 
 - `w:tblBorders` top/left/bottom/right/insideH/insideV, each `single`, `sz=4`, colour BFBFBF.
 - Header row: `<w:tblHeader w:val="true"/>`, bold, shading `<w:shd w:val="clear" w:color="auto" w:fill="F2F2F2"/>`. Every row `<w:cantSplit w:val="true"/>`.
-- Cells: 10.5 pt, 2 pt before/after, line 1.0, `<w:vAlign w:val="center"/>`; numeric cells (digits, `% . , / -`) right-aligned, text left.
+- Cells: 11 pt, 2 pt before/after, line 1.0, `<w:vAlign w:val="center"/>`; numeric cells (digits, `% . , / -`) right-aligned, text left.
 - Width: full text width (15.92 cm), `<w:tblLayout w:type="fixed"/>`. Column weight = longest cell text length clamped to 8–50, each column at least 12% before normalising. Set `w:gridCol` widths and every cell's width in twips (cm / 2.54 × 1440), cell margins left/right 100 twips.
 - 10 pt space before the paragraph that follows a table.
 

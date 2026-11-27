@@ -1,6 +1,6 @@
 ---
 name: english-docx
-description: Builds English Word .docx files in a plain, normal look (Arial or Times New Roman, simple headings, simple tables), from a Claude Doc or written directly. APA, MLA or other styles only when the user names one. Use for Claude Doc to Word in English, an English Word file with no Claude Doc, a simple report, assignment, letter or notes in docx.
+description: Builds English Word .docx files in a plain, normal look (Times New Roman, simple headings, simple tables), from a Claude Doc or written directly. APA, MLA or other styles only when the user names one. Use for Claude Doc to Word in English, an English Word file with no Claude Doc, a simple report, assignment, letter or notes in docx.
 ---
 
 # English docx (Claude Doc → Word, or Word directly)
@@ -55,13 +55,13 @@ The file leaves the builder ready to hand over; nothing is cleaned afterwards. E
 | Element | Style |
 |---|---|
 | Page | A4, margins 2.54 cm, page number centered in the footer (omit for a one-page doc) |
-| Font | Arial by default; Times New Roman when the user asks for it or the template uses it. One family for the whole document: body, headings, tables, captions. Never Calibri (Word's default) |
-| Body | 11 pt, black, **justified**, line 1.15, 8 pt after, no first-line indent |
+| Font | Times New Roman by default; Arial when the user asks for it or the template uses it. One family for the whole document: body, headings, tables, captions. Never Calibri (Word's default) |
+| Body | 12 pt, black, **justified**, line 1.15, 8 pt after, no first-line indent |
 | `#` | document title, 20 bold, left-aligned; Title style |
 | `##` | 16 bold |
-| `###` | 13 bold |
-| `####` | 11 bold |
-| Table | full width, all thin grey borders, header bold on light grey (F2F2F2) and repeated, rows unsplit, cells 10.5 pt |
+| `###` | 14 bold |
+| `####` | 12 bold |
+| Table | full width, all thin grey borders, header bold on light grey (F2F2F2) and repeated, rows unsplit, cells 11 pt |
 | Caption (`Table n: …`, `Figure n: …`) | 10 italic, kept with its table or picture |
 | Lists | normal bullets and numbers, justified, 4 pt after, every numbered list restarts at 1 |
 | Equations | native Word equations, Cambria Math 12, centered |
