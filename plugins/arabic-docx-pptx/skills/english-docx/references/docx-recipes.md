@@ -13,7 +13,7 @@ One file, `<scratch>/build.py`, that reads the markdown, walks it line by line i
 - Inline `**bold**`, `*italic*`, `` `code` ``, `[text](url)` (keep the text); unescape `\* \_ \[ \] \# \- \.`.
 - A paragraph is consecutive non-blank lines joined by spaces. `---` is a page break. The `date · @name` line right under the `#` title is dropped.
 
-Print one summary line at the end: `cover no|yes; toc no|yes; equations N; images N embedded, M missing; tables N`.
+Print one summary line at the end: `cover no|yes (separate page); toc no|yes; equations N; images N embedded, M missing; tables N`.
 
 ## Document setup
 
@@ -57,10 +57,17 @@ A centered paragraph, 4 pt before and after, line 1.0, keep with next, holding `
 
 Centered paragraph, 6 before, 4 after, keep with next; width scaled down to the text width and height to at most 18 cm (`run.add_picture(path, width=…)`). A chart's caption goes under it. A missing file leaves `[image: alt]` as text and counts as missing.
 
-## Cover and contents page (only when asked)
+## Cover page (separate page) and contents page
 
-- Cover: each line its own centered paragraph, title 26 bold about 110 pt down, fields as `label: value` lines under it, then a page break; the cover section has no footer.
-- Contents: centered bold `Contents` 16 pt, then one paragraph holding a TOC field (`TOC \o "2-3" \h \z \u`, begin/instr/separate/hint/end runs, `w:dirty="true"`), plus `<w:updateFields w:val="true"/>` in settings so Word fills it on open. Body goes in a new section with `w:pgNumType w:start="1"`.
+Everything before the first real `##` is the cover, when there is more than a title.
+
+- **Own section**: the cover is the first section and holds only its own lines. The body is a new section (`WD_SECTION.NEW_PAGE`), so the cover always sits alone on page 1.
+- **Layout**: each line its own centered paragraph. Lines above the `#` title (institution block): bold, 0 before, 2 after. Title: 26 pt bold (set `w:szCs` too), 110 pt before (160 when nothing sits above it), 70 after. Lines under the title (fields as `label: value`): 0 before, 8 after. A standalone last line (a date) gets 70 pt before.
+- **A table on the cover is printed as lines**, never as a Word table: two columns with a generic header (Item, Field, Details, Value) or a lone row become one `**label:** value` line per row; otherwise the header joined by ` - ` in bold, then each row joined by ` - `.
+- **No header, footer or page number on the cover.** The body section's footer is unlinked from the previous one and holds the centered `PAGE` field; add `<w:pgNumType w:start="1"/>` right after `w:pgMar` so the body's first page is numbered 1.
+- A trailing page break at the end of the cover is removed, so no blank page appears; the section break does the work.
+- **Contents page** (only when asked): between the cover and the body, a centered bold `Contents` 16 pt, then one paragraph holding a TOC field (`TOC \o "2-3" \h \z \u`, begin/instr/separate/hint/end runs, `w:dirty="true"`), plus `<w:updateFields w:val="true"/>` in settings so Word fills it on open. Verify by rendering: LibreOffice shows the hint line, Word fills the entries.
+- No cover: one section, page number in the footer from page 1.
 
 ## Metadata and clean output
 

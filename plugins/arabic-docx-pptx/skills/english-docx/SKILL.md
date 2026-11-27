@@ -11,7 +11,7 @@ Turn a Claude Doc, or content you write yourself, into a normal-looking English 
 - Nothing customized → the plain style below.
 - User names APA 7 (or a client template says so) → read `references/apa7.md` and use it in place of the plain style. Never use APA on your own.
 - Another named style (MLA, Harvard, IEEE): follow the user's rules value by value; the plain style fills the gaps.
-- A cover page or contents page only when the user asks for one; recipe in `docx-recipes.md`.
+- A cover page only when the user asks for one, or when the content before the first `##` is title-page material (institution, title, name fields, date). The cover is always **its own separate page**: alone on page 1, nothing else on it, no page number, and the body starts on a new page numbered from 1. A contents page follows the cover only when asked. Recipe in `docx-recipes.md`.
 - Arabic or mixed Arabic/English document: use the `arabic-docx` skill instead.
 
 **Two routes.** Pick one before step 1:
@@ -33,7 +33,7 @@ A client's existing .docx to fill or edit takes neither route: edit that file in
    - Write `<scratch>/images.json` as a list of `{"alt": "<alt or caption>", "path": "<file>"}` in order.
 4. **Write the builder.** Read `references/docx-recipes.md` in full, then write `<scratch>/build.py` (python-docx; `pip install python-docx` when the import fails) that turns the markdown into the .docx and prints the summary line the recipes define. Reuse it for every later file in the session.
 5. **Build.** `python3 <scratch>/build.py <input.md> "<doc title>.docx" [<scratch>/images.json]`. Done when the summary shows `equations` equal to the formulas in the doc and `0 missing` images, and the file passes the delivery-clean list: `unzip -l` shows no `word/comments.xml`, `word/document.xml` has no `w:ins`, `w:del` or `w:vanish`, and `docProps/core.xml` has empty author and last-modified-by.
-6. **Verify.** `soffice --headless --convert-to pdf` (set `HOME=/tmp SAL_USE_VCLPLUGIN=svp` when it complains about a display), then `pdftoppm -r 60 -png` and view the first page, a table page, a list page, and pages with a formula or picture. Done when: headings, tables and lists look as the tables below say; every numbered list starts at 1; formulas are real equations with no leftover `_`, `\` or `$`; pictures sit centered with the caption under them; no box glyphs.
+6. **Verify.** `soffice --headless --convert-to pdf` (set `HOME=/tmp SAL_USE_VCLPLUGIN=svp` when it complains about a display), then `pdftoppm -r 60 -png` and view the first page (with a cover: the cover alone, then page 2 starting the body numbered 1), a table page, a list page, and pages with a formula or picture. Done when: headings, tables and lists look as the tables below say; every numbered list starts at 1; formulas are real equations with no leftover `_`, `\` or `$`; pictures sit centered with the caption under them; no box glyphs.
 7. **Deliver.** Send the file (SendUserFile where the session has it), one clean file named after the doc title. Name anything missing (a picture that could not be fetched, every empty field the person must fill).
 
 ## Delivery-clean output (built in)
@@ -67,9 +67,10 @@ The file leaves the builder ready to hand over; nothing is cleaned afterwards. E
 | Equations | native Word equations, Cambria Math 12, centered |
 | Pictures | centered, scaled to the text width (at most 18 cm tall), caption under |
 | Code | Consolas 10, left-aligned |
+| Cover (when present) | separate first page, every line centered, institution lines on top, title large below, `label: value` fields under it, date line near the bottom; no header, footer or page number |
 | `---` | page break |
 | `date · @name` line under the title | removed |
 
 ## Writing the markdown (direct route)
 
-Plain markdown: `#` title, `##`/`###` sections, pipe tables with a caption line above, `-` and `1.` lists, `$$…$$` equations, `![alt](/abs/path.png)` pictures. Write the sections the user asked for, in full prose; no filler headings. A field the user has not given keeps its label with an empty value (`Student:`).
+Plain markdown. For a cover, put its lines before the first `##`, top to bottom: institution lines, `# Title`, `**Label:** value` fields, a closing date line. Then `#` title, `##`/`###` sections, pipe tables with a caption line above, `-` and `1.` lists, `$$…$$` equations, `![alt](/abs/path.png)` pictures. Write the sections the user asked for, in full prose; no filler headings. A field the user has not given keeps its label with an empty value (`Student:`).
