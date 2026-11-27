@@ -45,7 +45,7 @@ Build the final file with your builder. The connector's own `docx` export carrie
    - Name the defect and its root cause in one line each, then propose the smallest change that prevents it: a recipe, the house-style table, or a step here.
    - Make the change only after the user approves the proposal.
    - Apply it in a working copy of this skill, rerun steps 5 and 6 with the fixed builder on the same doc, and send the user the new .docx.
-   - Once the user confirms the new output is correct, carry the change to the skill's source. A user who maintains the plugin (a clone of `Dawood-Saleh/arabic-docx-pptx-skills` or a fork): commit it there and raise `version` in `.claude-plugin/plugin.json`. Any other user: send the change as a patch file, ready to attach to an issue at https://github.com/Dawood-Saleh/arabic-docx-pptx-skills/issues.
+   - Once the user confirms the new output is correct, carry the change to the skill's source. A user who maintains the plugin (a clone of `EngDawood/arabic-docx-pptx-skills` or a fork): commit it there and raise `version` in `.claude-plugin/plugin.json`. Any other user: send the change as a patch file, ready to attach to an issue at https://github.com/EngDawood/arabic-docx-pptx-skills/issues.
    - A defect the user declines stays as it is; keep the deliverable from step 7.
 
 ## Delivery-clean output (built in)
